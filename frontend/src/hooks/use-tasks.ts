@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CalendarTask } from '@/types/calendar';
-import { apiGet, apiPost, apiPut, apiDelete, apiRequest, API_ENDPOINTS, buildApiUrl } from '@/config/api';
+import { apiRequest, API_ROUTES } from '@/config/api';
 import { getApiBaseUrl } from '@/config/environment';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,9 +17,9 @@ export const useTasks = (calendarId: number = 1) => {
     
     try {
       // Usar o endpoint correto para buscar tarefas por calendário
-      const url = `${API_ENDPOINTS.TASKS.READ_BY_CALENDAR}/${calendarId}`;
+      const url = `${API_ROUTES.TASKS.LIST}?calendar_id=${calendarId}`;
       
-      const response = await apiGet(url);
+      const response = await apiRequest(url);
       
       if (response.success) {
         // Converter datas do backend para objetos Date
@@ -72,7 +72,7 @@ export const useTasks = (calendarId: number = 1) => {
     setError(null);
     
     try {
-      const response = await apiPost(API_ENDPOINTS.TASKS.CREATE, {
+      const response = await apiRequest(API_ROUTES.TASKS.CREATE, {
         calendar_id: calendarId,
         title: taskData.title,
         content_type: taskData.contentType,
@@ -139,7 +139,7 @@ export const useTasks = (calendarId: number = 1) => {
         updateData.date = `${updates.date.getFullYear()}-${String(updates.date.getMonth() + 1).padStart(2, '0')}-${String(updates.date.getDate()).padStart(2, '0')}`;
       }
       
-      const response = await apiPut(`${API_ENDPOINTS.TASKS.UPDATE}/${taskId}`, updateData);
+              const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
       
       if (response.success) {
         setTasks(prev => prev.map(task => 
@@ -176,7 +176,7 @@ export const useTasks = (calendarId: number = 1) => {
     
     try {
       // Primeiro, excluir a tarefa
-      const response = await apiDelete(`${API_ENDPOINTS.TASKS.DELETE}/${taskId}`);
+              const response = await apiRequest(`${API_ROUTES.TASKS.DELETE(taskId)}`, {
       
       if (response.success) {
         // Depois, excluir todas as notas associadas a esta tarefa
@@ -233,7 +233,7 @@ export const useTasks = (calendarId: number = 1) => {
     try {
       const formattedDate = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
       
-      const response = await apiRequest(`${API_ENDPOINTS.TASKS.MOVE}/${taskId}/move`, {
+              const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
         method: 'PATCH',
         body: JSON.stringify({ new_date: formattedDate })
       });
