@@ -2,7 +2,7 @@
   "name": "calendario-editorial-api",
   "version": "1.0.0",
   "description": "API Serverless Functions para Calendário Editorial",
-  "main": "index.js",
+  "main": "builder.js",
   "engines": {
     "node": "18.x"
   },
