@@ -11,10 +11,5 @@
       "src": "/(.*)",
       "dest": "/builder.js"
     }
-  ],
-  "functions": {
-    "builder.js": {
-      "maxDuration": 30
-    }
-  }
+  ]
 }
