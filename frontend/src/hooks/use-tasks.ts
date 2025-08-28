@@ -139,9 +139,12 @@ export const useTasks = (calendarId: number = 1) => {
         updateData.date = `${updates.date.getFullYear()}-${String(updates.date.getMonth() + 1).padStart(2, '0')}-${String(updates.date.getDate()).padStart(2, '0')}`;
       }
       
-              const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
-      
-      if (response.success) {
+        const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
+          method: 'PUT',
+          body: JSON.stringify(updates)
+        });
+        
+        if (response.success) {
         setTasks(prev => prev.map(task => 
           task.id === taskId ? { ...task, ...updates } : task
         ));
@@ -176,9 +179,11 @@ export const useTasks = (calendarId: number = 1) => {
     
     try {
       // Primeiro, excluir a tarefa
-              const response = await apiRequest(`${API_ROUTES.TASKS.DELETE(taskId)}`, {
-      
-      if (response.success) {
+        const response = await apiRequest(`${API_ROUTES.TASKS.DELETE(taskId)}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.success) {
         // Depois, excluir todas as notas associadas a esta tarefa
         try {
           const notesResponse = await apiRequest(`${getApiBaseUrl()}/notes?task_id=${taskId}`, {
@@ -233,10 +238,10 @@ export const useTasks = (calendarId: number = 1) => {
     try {
       const formattedDate = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
       
-              const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ new_date: formattedDate })
-      });
+        const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ new_date: formattedDate })
+        });
       
       if (response.success) {
         // Atualizar a tarefa no estado local
