@@ -5,7 +5,7 @@ const API_CONFIG = {
     timeout: 10000
   },
   production: {
-    baseURL: process.env.VITE_API_URL || 'https://seu-dominio.vercel.app/api',
+    baseURL: process.env.VITE_API_URL || 'https://seu-backend.vercel.app',
     timeout: 15000
   }
 };
