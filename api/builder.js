@@ -46,17 +46,26 @@ app.get('/status', (req, res) => {
 
 // Importar rotas
 const authRoutes = require('./auth');
-const calendarRoutes = require('./calendars');
-const taskRoutes = require('./tasks');
-const noteRoutes = require('./notes');
-const sharingRoutes = require('./sharing');
 
 // Usar rotas
 app.use('/auth', authRoutes);
-app.use('/calendars', calendarRoutes);
-app.use('/tasks', taskRoutes);
-app.use('/notes', noteRoutes);
-app.use('/sharing', sharingRoutes);
+
+// Rotas temporárias para teste
+app.get('/calendars', (req, res) => {
+    res.json({ message: 'Endpoint de calendários funcionando!' });
+});
+
+app.get('/tasks', (req, res) => {
+    res.json({ message: 'Endpoint de tarefas funcionando!' });
+});
+
+app.get('/notes', (req, res) => {
+    res.json({ message: 'Endpoint de notas funcionando!' });
+});
+
+app.get('/sharing', (req, res) => {
+    res.json({ message: 'Endpoint de compartilhamento funcionando!' });
+});
 
 // Middleware de erro
 app.use((err, req, res, next) => {
