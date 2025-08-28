@@ -1,6 +1,3 @@
-const { pool, testConnection } = require('./supabase');
-
-// Testar conexão ao inicializar
-testConnection();
+const { pool } = require('./supabase');
 
 module.exports = pool;
