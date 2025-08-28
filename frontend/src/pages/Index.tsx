@@ -18,7 +18,7 @@ import { useNotes } from "@/hooks/use-notes";
 import { DragAndDropProvider } from "@/contexts/DragAndDropContext";
 import { getApiBaseUrl } from "@/config/environment";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest, API_ENDPOINTS, buildApiUrl } from "@/config/api";
+import { apiRequest, API_ROUTES, buildApiUrl } from "@/config/api";
 
 const Index = () => {
   const { user } = useAuth();
@@ -84,7 +84,7 @@ const Index = () => {
       setCurrentCalendarId(newCalendarId);
       
       // Buscar dados do novo calendário
-      const calendarsResponse = await apiRequest(API_ENDPOINTS.CALENDARS.LIST);
+      const calendarsResponse = await apiRequest(API_ROUTES.CALENDARS.LIST);
       if (calendarsResponse.success && calendarsResponse.calendars) {
         const selectedCalendar = calendarsResponse.calendars.find(c => c.id === newCalendarId);
         if (selectedCalendar) {
@@ -129,10 +129,10 @@ const Index = () => {
     if (confirm('Tem certeza que deseja excluir este calendário? Todas as tarefas serão perdidas!')) {
       try {
         console.log('🔐 DEBUG: Usuário confirmou exclusão, fazendo requisição...');
-        console.log('   URL:', `${API_ENDPOINTS.CALENDARS.DELETE}/${calendarId}`);
+        console.log('   URL:', `${API_ROUTES.CALENDARS.DELETE}/${calendarId}`);
         console.log('   Método: DELETE');
         
-        const response = await apiRequest(`${API_ENDPOINTS.CALENDARS.DELETE}/${calendarId}`, {
+        const response = await apiRequest(`${API_ROUTES.CALENDARS.DELETE}/${calendarId}`, {
           method: 'DELETE',
           body: JSON.stringify({ id: calendarId })
         });
@@ -150,7 +150,7 @@ const Index = () => {
           if (calendarId === currentCalendarId) {
             try {
               // Buscar lista de calendários disponíveis
-              const calendarsResponse = await apiRequest(API_ENDPOINTS.CALENDARS.LIST);
+              const calendarsResponse = await apiRequest(API_ROUTES.CALENDARS.LIST);
               if (calendarsResponse.success && calendarsResponse.calendars && calendarsResponse.calendars.length > 0) {
                 // Ainda há calendários - selecionar o primeiro
                 const firstCalendar = calendarsResponse.calendars[0];
@@ -203,7 +203,7 @@ const Index = () => {
       console.log('🔐 DEBUG: Passo 1: Criando novo calendário...');
       
       // 1. Criar novo calendário com dados do existente
-      const newCalendarResponse = await apiRequest(API_ENDPOINTS.CALENDARS.CREATE, {
+      const newCalendarResponse = await apiRequest(API_ROUTES.CALENDARS.CREATE, {
         method: 'POST',
         body: JSON.stringify({
           company_name: `${calendar.company_name} - Cópia`,
@@ -224,7 +224,7 @@ const Index = () => {
       console.log('🔐 DEBUG: Passo 2: Buscando tarefas do calendário original...');
       
       // 2. Buscar todas as tarefas do calendário original
-      const tasksResponse = await apiRequest(API_ENDPOINTS.TASKS.READ);
+      const tasksResponse = await apiRequest(API_ROUTES.TASKS.READ);
       
       console.log('📥 DEBUG: Resposta da busca de tarefas:', tasksResponse);
       
@@ -236,7 +236,7 @@ const Index = () => {
         for (const task of tasksResponse.tasks) {
           if (task.calendar_id === calendar.id) {
             console.log('   📝 Duplicando tarefa:', task.title);
-            await apiRequest(API_ENDPOINTS.TASKS.CREATE, {
+            await apiRequest(API_ROUTES.TASKS.CREATE, {
               method: 'POST',
               body: JSON.stringify({
                 calendar_id: newCalendarId,
@@ -267,7 +267,7 @@ const Index = () => {
         const taskIdMapping = new Map();
         
         // Primeiro, buscar as tarefas duplicadas para criar o mapeamento
-        const duplicatedTasksResponse = await apiRequest(API_ENDPOINTS.TASKS.READ);
+        const duplicatedTasksResponse = await apiRequest(API_ROUTES.TASKS.READ);
         if (duplicatedTasksResponse.success && duplicatedTasksResponse.tasks) {
           const originalTasks = tasksResponse.tasks.filter(task => task.calendar_id === calendar.id);
           const newTasks = duplicatedTasksResponse.tasks.filter(task => task.calendar_id === newCalendarId);
@@ -505,7 +505,7 @@ const Index = () => {
   // Função para buscar dados do calendário atual
   const loadCalendarData = async () => {
     try {
-      const response = await apiRequest(`${API_ENDPOINTS.CALENDARS.READ}/${currentCalendarId}`);
+      const response = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${currentCalendarId}`);
       if (response.success && response.calendar) {
         setCompanyName(response.calendar.company_name || '');
         setStartMonth(response.calendar.start_month || '');
@@ -540,7 +540,7 @@ const Index = () => {
   // Função para carregar o primeiro calendário disponível do usuário
   const loadFirstAvailableCalendar = async () => {
     try {
-      const response = await apiRequest(API_ENDPOINTS.CALENDARS.LIST);
+      const response = await apiRequest(API_ROUTES.CALENDARS.LIST);
       
       if (response.success && response.calendars && response.calendars.length > 0) {
         // Há calendários - mostrar calendário
@@ -594,7 +594,7 @@ const Index = () => {
       // Há calendário salvo - carregar dados completos de uma vez
       const loadSavedCalendar = async () => {
         try {
-          const response = await apiRequest(`${API_ENDPOINTS.CALENDARS.READ}/${savedCalendarId}`);
+          const response = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${savedCalendarId}`);
                   if (response.success && response.calendar) {
           setCurrentCalendarId(parseInt(savedCalendarId));
           setHasCalendars(true);

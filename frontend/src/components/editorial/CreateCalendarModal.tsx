@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarSettings } from "@/types/calendar";
-import { apiPost, API_ENDPOINTS } from "@/config/api";
+import { apiPost, API_ROUTES } from "@/config/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar } from "lucide-react";
@@ -114,7 +114,7 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
         }
         
         // Chamar API para criar calendário (sem user_id - será obtido do token)
-        const response = await apiPost(API_ENDPOINTS.CALENDARS.CREATE, {
+        const response = await apiPost(API_ROUTES.CALENDARS.CREATE, {
           company_name: companyName,
           start_month: startMonth
         });

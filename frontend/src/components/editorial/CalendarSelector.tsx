@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, API_ENDPOINTS } from "@/config/api";
+import { apiRequest, API_ROUTES } from "@/config/api";
 
 interface Calendar {
   id: number;
@@ -60,7 +60,7 @@ export const CalendarSelector = ({
   const loadCalendars = async () => {
     setLoading(true);
     try {
-      const response = await apiRequest(API_ENDPOINTS.CALENDARS.LIST);
+      const response = await apiRequest(API_ROUTES.CALENDARS.LIST);
       if (response.success) {
         // Processar calendários para garantir que tenham created_at
         
