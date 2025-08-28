@@ -145,9 +145,9 @@ export const useTasks = (calendarId: number = 1) => {
         });
         
         if (response.success) {
-        setTasks(prev => prev.map(task => 
-          task.id === taskId ? { ...task, ...updates } : task
-        ));
+          setTasks(prev => prev.map(task => 
+            task.id === taskId ? { ...task, ...updates } : task
+          ));
         
         toast({
           title: "✅ Atualizado!",
@@ -184,7 +184,7 @@ export const useTasks = (calendarId: number = 1) => {
         });
         
         if (response.success) {
-        // Depois, excluir todas as notas associadas a esta tarefa
+          // Depois, excluir todas as notas associadas a esta tarefa
         try {
           const notesResponse = await apiRequest(`${getApiBaseUrl()}/notes?task_id=${taskId}`, {
             method: 'GET'
