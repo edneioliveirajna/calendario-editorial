@@ -1,65 +1,72 @@
 # 🚀 Configuração das Variáveis de Ambiente no Vercel
 
-## 📋 Variáveis Necessárias
+## 📋 **Variáveis Obrigatórias para o Backend**
 
-Configure estas variáveis no seu projeto Vercel `api-back-rosy`:
-
-### 🔐 Banco de Dados (Supabase)
+### **1. Configurações do Supabase Client (RECOMENDADO)**
 ```
-DB_HOST=db.snxccjgkqqniowserwtv.supabase.co
-DB_PORT=5432
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASS=Calendario2024!@#
+SUPABASE_URL=https://snxccjgkqqniowserwtv.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueGNjamdrcXFuaW93c2Vyd3R2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNDU3NTUsImV4cCI6MjA3MTkyMTc1NX0.GVVqWPVt_GuWrXhdkztjHv5uWYUDVPuQlZSBhRyOa28
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueGNjamdrcXFuaW93c2Vyd3R2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjM0NTc1NSwiZXhwIjoyMDcxOTIxNzU1fQ.LnxWPTbiD0JQiNh5i5qMyq2AHGkSkQV0yZYaPnz31rE
 ```
 
-### 🔑 Autenticação
+### **2. Configurações JWT**
 ```
 JWT_SECRET=seu_jwt_secret_super_seguro_aqui
 JWT_EXPIRES_IN=24h
 ```
 
-### 🌐 Configurações
+### **3. Configurações CORS**
 ```
 CORS_ORIGIN=https://seu-frontend.vercel.app
-NODE_ENV=production
 ```
 
-## ⚡ Como Configurar (Método Rápido)
+### **4. Configurações do Banco (PostgreSQL direto - OPCIONAL)**
+```
+DB_HOST=db.snxccjgkqqniowserwtv.supabase.co
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASS=Calendario2024!@#
+DB_PORT=5432
+```
 
-### 1. Vá para o Dashboard do Vercel
-- Acesse: https://vercel.com/dashboard
-- Selecione o projeto: `api-back-rosy`
+## 🔧 **Como Configurar no Vercel:**
 
-### 2. Configure as Variáveis
-- Clique em **Settings**
-- Vá para **Environment Variables**
-- Clique em **Add New**
+### **1. Acesse o Dashboard do Vercel**
+- Vá para [vercel.com/dashboard](https://vercel.com/dashboard)
+- Selecione seu projeto backend
 
-### 3. Adicione Cada Variável
-Para cada variável acima:
-- **Name**: `DB_HOST` (exemplo)
-- **Value**: `db.snxccjgkqqniowserwtv.supabase.co` (exemplo)
-- **Environment**: ✅ Production
-- Clique em **Save**
+### **2. Configure as Variáveis**
+- Clique em **Settings** → **Environment Variables**
+- Adicione cada variável acima
+- **IMPORTANTE:** Selecione todos os ambientes (Production, Preview, Development)
 
-### 4. Faça um Novo Deploy
-- Vá para **Deployments**
-- Clique em **Redeploy** no último deploy
+### **3. Faça Deploy**
+- Após configurar, faça um novo deploy
+- As variáveis estarão disponíveis na API
 
-## 🧪 Teste Após Configuração
+## 🧪 **Teste a Configuração:**
 
-1. **Teste básico**: `https://api-back-rosy.vercel.app/`
-2. **Teste banco**: `https://api-back-rosy.vercel.app/test-db`
+### **1. Endpoint de Status:**
+```
+GET https://api-back-xi.vercel.app/status
+```
 
-## ❌ Problemas Comuns
+### **2. Teste Supabase Client:**
+```
+GET https://api-back-xi.vercel.app/test-supabase-client
+```
 
-- **Erro 500**: Variáveis não configuradas
-- **Conexão recusada**: Credenciais do banco incorretas
-- **CORS**: `CORS_ORIGIN` não configurado
+### **3. Teste de Conectividade:**
+```
+GET https://api-back-xi.vercel.app/test-connectivity
+```
 
-## 🔗 Links Úteis
+## ✅ **Resultado Esperado:**
+- **Supabase Client:** ✅ Conectado
+- **Banco de Dados:** ✅ Acessível
+- **API:** ✅ Funcionando
 
-- [Dashboard Vercel](https://vercel.com/dashboard)
-- [Documentação Vercel](https://vercel.com/docs)
-- [Supabase Dashboard](https://supabase.com/dashboard)
+## 🚨 **Problemas Comuns:**
+- **Variáveis não configuradas:** Verifique se todas foram adicionadas
+- **Deploy antigo:** Faça um novo deploy após configurar
+- **Ambientes:** Certifique-se de selecionar todos os ambientes

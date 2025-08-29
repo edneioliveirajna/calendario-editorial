@@ -296,13 +296,14 @@ app.get('/test-supabase-client', async (req, res) => {
         
         const result = await testConnection();
         
-        if (result) {
+        if (result.success) {
             res.json({
                 success: true,
                 message: '✅ Conexão com Supabase Client funcionando!',
                 timestamp: new Date().toISOString(),
                 method: 'Supabase Client',
-                status: 'Conectado'
+                status: 'Conectado',
+                data: result.data
             });
         } else {
             res.status(500).json({
@@ -310,7 +311,8 @@ app.get('/test-supabase-client', async (req, res) => {
                 message: '❌ Falha na conexão com Supabase Client',
                 timestamp: new Date().toISOString(),
                 method: 'Supabase Client',
-                status: 'Falhou'
+                status: 'Falhou',
+                error: result.error
             });
         }
     } catch (error) {
