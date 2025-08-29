@@ -72,6 +72,59 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
+// Rota de debug detalhado
+app.get('/debug', (req, res) => {
+    try {
+        // Verificar variáveis de ambiente
+        const envVars = {
+            DB_HOST: process.env.DB_HOST,
+            DB_PORT: process.env.DB_PORT,
+            DB_NAME: process.env.DB_NAME,
+            DB_USER: process.env.DB_USER,
+            DB_PASS: process.env.DB_PASS ? '***CONFIGURADA***' : 'NÃO CONFIGURADA',
+            JWT_SECRET: process.env.JWT_SECRET ? '***CONFIGURADA***' : 'NÃO CONFIGURADA',
+            JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
+            CORS_ORIGIN: process.env.CORS_ORIGIN,
+            NODE_ENV: process.env.NODE_ENV
+        };
+
+        // Verificar se o módulo database pode ser carregado
+        let databaseModule = null;
+        let databaseError = null;
+        
+        try {
+            databaseModule = require('./config/database');
+        } catch (error) {
+            databaseError = error.message;
+        }
+
+        res.json({
+            success: true,
+            message: '🔍 Debug das variáveis de ambiente',
+            timestamp: new Date().toISOString(),
+            environment: {
+                node_version: process.version,
+                platform: process.platform,
+                arch: process.arch,
+                memory: process.memoryUsage()
+            },
+            variables: envVars,
+            database_module: {
+                loaded: !!databaseModule,
+                error: databaseError
+            },
+            all_env_keys: Object.keys(process.env).filter(key => key.startsWith('DB_') || key.startsWith('JWT_') || key.startsWith('CORS_') || key === 'NODE_ENV')
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '❌ Erro no debug',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // Importar rotas
 const authRoutes = require('./auth');
 
