@@ -1,7 +1,7 @@
 // Configuração de ambiente - APENAS DESENVOLVIMENTO
 export const ENVIRONMENT = {
   // Desenvolvimento local
-  API_BASE_URL: process.env.VITE_API_URL || 'https://seu-backend.vercel.app',
+  API_BASE_URL: process.env.VITE_API_URL || 'https://api-back-rosy.vercel.app',
   FRONTEND_URL: process.env.VITE_FRONTEND_URL || 'https://seu-frontend.vercel.app',
   BACKEND_PORT: '3001',
   FRONTEND_PORT: '8080'
