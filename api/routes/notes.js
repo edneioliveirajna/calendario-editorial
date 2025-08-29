@@ -1,0 +1,410 @@
+const express = require('express');
+const router = express.Router();
+const { supabase } = require('../config/supabase-client');
+
+// Middleware de autenticação (simples por enquanto)
+const authenticateUser = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Token de autenticação necessário' 
+            });
+        }
+        
+        // Verificar token com Supabase
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (error || !user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Token inválido' 
+            });
+        }
+        
+        req.user = user;
+        next();
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro na autenticação',
+            error: error.message 
+        });
+    }
+};
+
+// CREATE - Criar nova nota
+router.post('/', authenticateUser, async (req, res) => {
+    try {
+        const { title, content, tags, calendar_id, task_id } = req.body;
+        const user_id = req.user.id;
+        
+        if (!title) {
+            return res.status(400).json({
+                success: false,
+                message: 'Título da nota é obrigatório'
+            });
+        }
+        
+        if (!content) {
+            return res.status(400).json({
+                success: false,
+                message: 'Conteúdo da nota é obrigatório'
+            });
+        }
+        
+        // Verificar se o calendário pertence ao usuário (se fornecido)
+        if (calendar_id) {
+            const { data: calendar, error: calendarError } = await supabase
+                .from('calendars')
+                .select('id')
+                .eq('id', calendar_id)
+                .eq('user_id', user_id)
+                .single();
+            
+            if (calendarError || !calendar) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Calendário não encontrado'
+                });
+            }
+        }
+        
+        // Verificar se a tarefa pertence ao usuário (se fornecida)
+        if (task_id) {
+            const { data: task, error: taskError } = await supabase
+                .from('tasks')
+                .select('id')
+                .eq('id', task_id)
+                .eq('user_id', user_id)
+                .single();
+            
+            if (taskError || !task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tarefa não encontrada'
+                });
+            }
+        }
+        
+        const { data, error } = await supabase
+            .from('notes')
+            .insert([
+                {
+                    title,
+                    content,
+                    tags: tags || [],
+                    calendar_id: calendar_id || null,
+                    task_id: task_id || null,
+                    user_id,
+                    created_at: new Date().toISOString()
+                }
+            ])
+            .select();
+        
+        if (error) throw error;
+        
+        res.status(201).json({
+            success: true,
+            message: 'Nota criada com sucesso!',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao criar nota:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao criar nota',
+            error: error.message
+        });
+    }
+});
+
+// READ - Listar todas as notas do usuário
+router.get('/', authenticateUser, async (req, res) => {
+    try {
+        const user_id = req.user.id;
+        const { calendar_id, task_id, tags } = req.query;
+        
+        let query = supabase
+            .from('notes')
+            .select(`
+                *,
+                calendars (
+                    id,
+                    name,
+                    color
+                ),
+                tasks (
+                    id,
+                    title,
+                    status
+                )
+            `)
+            .eq('user_id', user_id);
+        
+        // Filtros opcionais
+        if (calendar_id) query = query.eq('calendar_id', calendar_id);
+        if (task_id) query = query.eq('task_id', task_id);
+        if (tags) {
+            const tagArray = tags.split(',');
+            query = query.overlaps('tags', tagArray);
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Notas carregadas com sucesso!',
+            data: data || []
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao listar notas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao listar notas',
+            error: error.message
+        });
+    }
+});
+
+// READ - Obter nota específica
+router.get('/:id', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user_id = req.user.id;
+        
+        const { data, error } = await supabase
+            .from('notes')
+            .select(`
+                *,
+                calendars (
+                    id,
+                    name,
+                    color
+                ),
+                tasks (
+                    id,
+                    title,
+                    status
+                )
+            `)
+            .eq('id', id)
+            .eq('user_id', user_id)
+            .single();
+        
+        if (error) {
+            if (error.code === 'PGRST116') {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Nota não encontrada'
+                });
+            }
+            throw error;
+        }
+        
+        res.json({
+            success: true,
+            message: 'Nota carregada com sucesso!',
+            data
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao obter nota:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao obter nota',
+            error: error.message
+        });
+    }
+});
+
+// UPDATE - Atualizar nota
+router.put('/:id', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, content, tags, calendar_id, task_id } = req.body;
+        const user_id = req.user.id;
+        
+        // Verificar se a nota existe e pertence ao usuário
+        const { data: existing, error: checkError } = await supabase
+            .from('notes')
+            .select('id')
+            .eq('id', id)
+            .eq('user_id', user_id)
+            .single();
+        
+        if (checkError || !existing) {
+            return res.status(404).json({
+                success: false,
+                message: 'Nota não encontrada'
+            });
+        }
+        
+        // Se mudou o calendário, verificar se pertence ao usuário
+        if (calendar_id) {
+            const { data: calendar, error: calendarError } = await supabase
+                .from('calendars')
+                .select('id')
+                .eq('id', calendar_id)
+                .eq('user_id', user_id)
+                .single();
+            
+            if (calendarError || !calendar) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Calendário não encontrado'
+                });
+            }
+        }
+        
+        // Se mudou a tarefa, verificar se pertence ao usuário
+        if (task_id) {
+            const { data: task, error: taskError } = await supabase
+                .from('tasks')
+                .select('id')
+                .eq('id', task_id)
+                .eq('user_id', user_id)
+                .single();
+            
+            if (taskError || !task) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tarefa não encontrada'
+                });
+            }
+        }
+        
+        const updateData = {};
+        if (title !== undefined) updateData.title = title;
+        if (content !== undefined) updateData.content = content;
+        if (tags !== undefined) updateData.tags = tags;
+        if (calendar_id !== undefined) updateData.calendar_id = calendar_id;
+        if (task_id !== undefined) updateData.task_id = task_id;
+        
+        updateData.updated_at = new Date().toISOString();
+        
+        const { data, error } = await supabase
+            .from('notes')
+            .update(updateData)
+            .eq('id', id)
+            .eq('user_id', user_id)
+            .select();
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Nota atualizada com sucesso!',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar nota:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao atualizar nota',
+            error: error.message
+        });
+    }
+});
+
+// DELETE - Deletar nota
+router.delete('/:id', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user_id = req.user.id;
+        
+        // Verificar se a nota existe e pertence ao usuário
+        const { data: existing, error: checkError } = await supabase
+            .from('notes')
+            .select('id')
+            .eq('id', id)
+            .eq('user_id', user_id)
+            .single();
+        
+        if (checkError || !existing) {
+            return res.status(404).json({
+                success: false,
+                message: 'Nota não encontrada'
+            });
+        }
+        
+        const { error } = await supabase
+            .from('notes')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user_id);
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Nota deletada com sucesso!'
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao deletar nota:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao deletar nota',
+            error: error.message
+        });
+    }
+});
+
+// READ - Buscar notas por texto
+router.get('/search/:query', authenticateUser, async (req, res) => {
+    try {
+        const { query } = req.params;
+        const user_id = req.user.id;
+        
+        if (!query || query.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Query de busca deve ter pelo menos 2 caracteres'
+            });
+        }
+        
+        const { data, error } = await supabase
+            .from('notes')
+            .select(`
+                *,
+                calendars (
+                    id,
+                    name,
+                    color
+                ),
+                tasks (
+                    id,
+                    title,
+                    status
+                )
+            `)
+            .eq('user_id', user_id)
+            .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Busca realizada com sucesso!',
+            query,
+            data: data || []
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro na busca:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro na busca',
+            error: error.message
+        });
+    }
+});
+
+module.exports = router;
