@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 });
 
 // Importar rotas
-const authRoutes = require('./auth');
+const authRoutes = require('./auth-new');
 const calendarRoutes = require('./routes/calendars');
 const taskRoutes = require('./routes/tasks');
 const noteRoutes = require('./routes/notes');
