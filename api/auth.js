@@ -7,7 +7,7 @@ const { supabase } = require('./config/supabase-client');
 const router = express.Router();
 
 // ========================================
-// ROTA: REGISTRO DE USUÁRIO
+// ROTA: REGISTRO DE USUÁRIO (DEPLOY FORÇADO)
 // ========================================
 router.post('/register', async (req, res) => {
     try {
