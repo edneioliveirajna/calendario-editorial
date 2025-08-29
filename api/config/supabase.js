@@ -11,8 +11,13 @@ const supabaseConfig = {
     ssl: {
         rejectUnauthorized: false
     },
-    // Forçar IPv6 para resolver problema de DNS
+    // Configurações para resolver problema de DNS
     family: 6,
+    lookup: (hostname, options, callback) => {
+        // Forçar resolução IPv6
+        const dns = require('dns');
+        dns.lookup(hostname, { family: 6 }, callback);
+    },
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
