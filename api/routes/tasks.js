@@ -200,13 +200,12 @@ router.get('/', authenticateUser, async (req, res) => {
     try {
         console.log('🔍 TASKS DEBUG: Iniciando listagem de tarefas');
         const user_id = req.user.id;
-        const { calendar_id, status, priority } = req.query;
+        const { calendar_id, status } = req.query;
         
         console.log('🔍 TASKS DEBUG: Parâmetros recebidos:', {
             user_id,
             calendar_id,
-            status,
-            priority
+            status
         });
         
         // 🔍 DEBUG: Primeiro vamos testar se a tabela tasks existe
@@ -230,6 +229,7 @@ router.get('/', authenticateUser, async (req, res) => {
         
         console.log('🔍 TASKS DEBUG: Tabela tasks existe, continuando com query...');
         
+        // 🔍 DEBUG: Buscar tarefas por calendários que pertencem ao usuário
         let query = supabase
             .from('tasks')
             .select(`
@@ -241,13 +241,11 @@ router.get('/', authenticateUser, async (req, res) => {
                 )
             `);
         
-        // 🔍 DEBUG: Como não temos user_id, vamos filtrar por calendar_id
-        // e deixar o frontend filtrar por usuário se necessário
+        // 🔍 DEBUG: Filtrar por calendar_id se fornecido
         if (calendar_id) {
             query = query.eq('calendar_id', calendar_id);
         }
         if (status) query = query.eq('status', status);
-        // 🔍 DEBUG: Campo priority não existe, removendo filtro
         
         console.log('🔍 TASKS DEBUG: Query construída, executando...');
         
@@ -258,12 +256,31 @@ router.get('/', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
-        console.log('✅ TASKS DEBUG: Tarefas carregadas com sucesso, total:', data?.length || 0);
+        // 🔍 DEBUG: Filtrar tarefas por calendários que pertencem ao usuário
+        let filteredTasks = [];
+        if (data && data.length > 0) {
+            for (const task of data) {
+                if (task.calendar_id) {
+                    const { data: calendar, error: calendarError } = await supabase
+                        .from('calendars')
+                        .select('id')
+                        .eq('id', task.calendar_id)
+                        .eq('user_id', user_id)
+                        .single();
+                    
+                    if (!calendarError && calendar) {
+                        filteredTasks.push(task);
+                    }
+                }
+            }
+        }
+        
+        console.log('✅ TASKS DEBUG: Tarefas filtradas com sucesso, total:', filteredTasks.length);
         
         res.json({
             success: true,
             message: 'Tarefas carregadas com sucesso!',
-            data: data || []
+            data: filteredTasks
         });
         
     } catch (error) {
