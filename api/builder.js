@@ -44,6 +44,34 @@ app.get('/status', (req, res) => {
     });
 });
 
+// Rota de teste de banco de dados
+app.get('/test-db', async (req, res) => {
+    try {
+        const pool = require('./config/database');
+        const client = await pool.connect();
+        const result = await client.query('SELECT NOW() as current_time, version() as db_version');
+        client.release();
+        
+        res.json({
+            success: true,
+            message: '✅ Conexão com banco funcionando!',
+            database: {
+                current_time: result.rows[0].current_time,
+                version: result.rows[0].db_version
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('❌ Erro na conexão com banco:', error);
+        res.status(500).json({
+            success: false,
+            message: '❌ Erro na conexão com banco',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // Importar rotas
 const authRoutes = require('./auth');
 
