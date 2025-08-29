@@ -74,7 +74,7 @@ router.get('/test-table', async (req, res) => {
     }
 });
 
-// Middleware de autenticação corrigido
+// Middleware de autenticação
 const authenticateUser = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -146,7 +146,7 @@ router.post('/', authenticateUser, async (req, res) => {
             });
         }
         
-        // 🔍 DEBUG: Verificar se o calendário pertence ao usuário
+        // Verificar se o calendário pertence ao usuário
         const { data: calendar, error: calendarError } = await supabase
             .from('calendars')
             .select('id')
@@ -208,28 +208,7 @@ router.get('/', authenticateUser, async (req, res) => {
             status
         });
         
-        // 🔍 DEBUG: Primeiro vamos testar se a tabela tasks existe
-        console.log('🔍 TASKS DEBUG: Testando se tabela tasks existe...');
-        const { data: tableTest, error: tableError } = await supabase
-            .from('tasks')
-            .select('id')
-            .limit(1);
-        
-        console.log('🔍 TASKS DEBUG: Teste da tabela - data:', tableTest);
-        console.log('🔍 TASKS DEBUG: Teste da tabela - error:', tableError);
-        
-        if (tableError) {
-            console.error('❌ TASKS ERROR: Tabela tasks não existe ou erro de acesso:', tableError);
-            return res.status(500).json({
-                success: false,
-                message: 'Erro: Tabela tasks não encontrada',
-                error: tableError.message
-            });
-        }
-        
-        console.log('🔍 TASKS DEBUG: Tabela tasks existe, continuando com query...');
-        
-        // 🔍 DEBUG: Buscar tarefas por calendários que pertencem ao usuário
+        // Buscar tarefas por calendários que pertencem ao usuário
         let query = supabase
             .from('tasks')
             .select(`
@@ -241,7 +220,7 @@ router.get('/', authenticateUser, async (req, res) => {
                 )
             `);
         
-        // 🔍 DEBUG: Filtrar por calendar_id se fornecido
+        // Filtrar por calendar_id se fornecido
         if (calendar_id) {
             query = query.eq('calendar_id', calendar_id);
         }
@@ -256,7 +235,7 @@ router.get('/', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
-        // 🔍 DEBUG: Filtrar tarefas por calendários que pertencem ao usuário
+        // Filtrar tarefas por calendários que pertencem ao usuário
         let filteredTasks = [];
         if (data && data.length > 0) {
             for (const task of data) {
@@ -323,7 +302,7 @@ router.get('/:id', authenticateUser, async (req, res) => {
             throw error;
         }
         
-        // 🔍 DEBUG: Verificar se o calendário da tarefa pertence ao usuário
+        // Verificar se o calendário da tarefa pertence ao usuário
         if (data && data.calendar_id) {
             const { data: calendar, error: calendarError } = await supabase
                 .from('calendars')
@@ -363,8 +342,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
         const { title, description, content_type, platforms, status, calendar_id, scheduled_date } = req.body;
         const user_id = req.user.id;
         
-        // 🔍 DEBUG: Como não temos user_id na tabela tasks, vamos verificar
-        // se a tarefa existe pelo ID e se o calendário pertence ao usuário
+        // Verificar se a tarefa existe pelo ID e se o calendário pertence ao usuário
         const { data: existing, error: checkError } = await supabase
             .from('tasks')
             .select('id, calendar_id')
@@ -378,7 +356,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
             });
         }
         
-        // 🔍 DEBUG: Verificar se o calendário da tarefa pertence ao usuário
+        // Verificar se o calendário da tarefa pertence ao usuário
         const { data: calendar, error: calendarError } = await supabase
             .from('calendars')
             .select('id')
@@ -451,8 +429,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         const { id } = req.params;
         const user_id = req.user.id;
         
-        // 🔍 DEBUG: Como não temos user_id na tabela tasks, vamos verificar
-        // se a tarefa existe pelo ID e se o calendário pertence ao usuário
+        // Verificar se a tarefa existe pelo ID e se o calendário pertence ao usuário
         const { data: existing, error: checkError } = await supabase
             .from('tasks')
             .select('id, calendar_id')
@@ -466,7 +443,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
             });
         }
         
-        // 🔍 DEBUG: Verificar se o calendário da tarefa pertence ao usuário
+        // Verificar se o calendário da tarefa pertence ao usuário
         const { data: calendar, error: calendarError } = await supabase
             .from('calendars')
             .select('id')
@@ -510,8 +487,7 @@ router.put('/:id/complete', authenticateUser, async (req, res) => {
         const { completed } = req.body;
         const user_id = req.user.id;
         
-        // 🔍 DEBUG: Como não temos user_id na tabela tasks, vamos verificar
-        // se a tarefa existe pelo ID e se o calendário pertence ao usuário
+        // Verificar se a tarefa existe pelo ID e se o calendário pertence ao usuário
         const { data: existing, error: checkError } = await supabase
             .from('tasks')
             .select('id, calendar_id')
@@ -525,7 +501,7 @@ router.put('/:id/complete', authenticateUser, async (req, res) => {
             });
         }
         
-        // 🔍 DEBUG: Verificar se o calendário da tarefa pertence ao usuário
+        // Verificar se o calendário da tarefa pertence ao usuário
         const { data: calendar, error: calendarError } = await supabase
             .from('calendars')
             .select('id')
