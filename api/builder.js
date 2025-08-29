@@ -66,6 +66,16 @@ app.use('/tasks', taskRoutes);
 app.use('/notes', noteRoutes);
 app.use('/sharing', sharingRoutes);
 
+// Rota de teste para sharing
+app.get('/test-sharing', (req, res) => {
+    res.json({
+        success: true,
+        message: '✅ Rota de teste para sharing funcionando!',
+        timestamp: new Date().toISOString(),
+        test: 'sharing test route'
+    });
+});
+
 // Rota de teste usando Supabase Client
 app.get('/test-supabase-client', async (req, res) => {
     try {
