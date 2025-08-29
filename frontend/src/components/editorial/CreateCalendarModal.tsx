@@ -120,10 +120,25 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
         });
         
         if (response.success) {
+          console.log('🔍 DEBUG: Resposta da criação:', response);
+          console.log('🔍 DEBUG: Tipo da resposta:', typeof response);
+          console.log('🔍 DEBUG: Chaves da resposta:', Object.keys(response));
+          console.log('🔍 DEBUG: response.calendar:', response.calendar);
+          
           toast({
             title: "✅ Sucesso!",
             description: "Calendário criado e salvo no banco de dados!",
           });
+          
+          // Verificar se response.calendar existe
+          if (!response.calendar) {
+            console.error('❌ DEBUG: response.calendar não existe!');
+            toast({
+              title: "⚠️ Aviso",
+              description: "Calendário criado mas dados incompletos retornados.",
+            });
+            return;
+          }
           
           // Salvar calendário criado no estado
           // setCreatedCalendar(response.calendar); // REMOVIDO
@@ -132,7 +147,7 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
           onCreateCalendar({
             ...settings,
             companyName: companyName, // Usar o nome processado
-            uniqueUrl: response.calendar.unique_url,
+            uniqueUrl: response.calendar.unique_url || '',
             calendarId: response.calendar.id, // Corrigido: acessar response.calendar.id
           } as CalendarSettings);
           
