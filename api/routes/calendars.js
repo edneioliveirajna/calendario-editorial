@@ -58,25 +58,37 @@ const authenticateUser = async (req, res, next) => {
 // CREATE - Criar novo calendário
 router.post('/', authenticateUser, async (req, res) => {
     try {
-        const { name, description, color, is_public } = req.body;
+        const { company_name, start_month, name, description, color, is_public } = req.body;
         const user_id = req.user.id;
         
-        if (!name) {
+        // Usar company_name se fornecido, senão usar name
+        const calendarName = company_name || name;
+        
+        if (!calendarName) {
             return res.status(400).json({
                 success: false,
-                message: 'Nome do calendário é obrigatório'
+                message: 'Nome da empresa ou nome do calendário é obrigatório'
             });
         }
+        
+        // Gerar unique_url baseado no nome da empresa
+        const uniqueUrl = calendarName.toLowerCase()
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '') + '-' + Date.now();
         
         const { data, error } = await supabase
             .from('calendars')
             .insert([
                 {
-                    name,
+                    company_name: calendarName,  // Usar company_name
+                    start_month: start_month || null,  // Adicionar start_month
+                    name: calendarName,  // Manter compatibilidade
                     description: description || '',
                     color: color || '#3B82F6',
                     is_public: is_public || false,
                     user_id,
+                    unique_url: uniqueUrl,  // Adicionar unique_url
                     created_at: new Date().toISOString()
                 }
             ])
@@ -87,7 +99,7 @@ router.post('/', authenticateUser, async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Calendário criado com sucesso!',
-            data: data[0]
+            calendar: data[0]  // Retornar 'calendar' em vez de 'data'
         });
         
     } catch (error) {
