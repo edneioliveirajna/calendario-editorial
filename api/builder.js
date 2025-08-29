@@ -66,6 +66,16 @@ app.use('/tasks', taskRoutes);
 app.use('/notes', noteRoutes);
 app.use('/sharing', sharingRoutes);
 
+// Rota de teste direta para auth
+app.get('/test-auth', (req, res) => {
+    res.json({
+        success: true,
+        message: '✅ Rota de teste de auth funcionando!',
+        timestamp: new Date().toISOString(),
+        test: 'auth test route'
+    });
+});
+
 // Rota de teste usando Supabase Client
 app.get('/test-supabase-client', async (req, res) => {
     try {
