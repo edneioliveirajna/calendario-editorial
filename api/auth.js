@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const pool = require('../config/database');
+const pool = require('./config/database');
 
 const router = express.Router();
 
