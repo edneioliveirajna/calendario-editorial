@@ -29,3 +29,17 @@ export interface CalendarSettings {
   uniqueUrl?: string;
   calendarId?: number;
 }
+
+// Interface para resposta da API
+export interface CalendarApiResponse {
+  id: number;
+  user_id: number;
+  name: string;
+  description?: string;
+  color: string;
+  unique_url: string;
+  company_name?: string;
+  start_month?: string;
+  created_at: string;
+  updated_at: string;
+}

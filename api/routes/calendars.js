@@ -145,7 +145,7 @@ router.post('/', authenticateUser, async (req, res) => {
         const user_id = req.user.id;
         
         console.log('🔍 API DEBUG: Iniciando criação de calendário');
-        console.log('🔍 API DEBUG: Dados recebidos:', { company_name, start_month, name, description, color, is_public });
+        console.log('🔍 API DEBUG: Dados recebidos:', { company_name, start_month, name, description, color });
         console.log('🔍 API DEBUG: User ID:', user_id);
         
         // Usar company_name se fornecido, senão usar name

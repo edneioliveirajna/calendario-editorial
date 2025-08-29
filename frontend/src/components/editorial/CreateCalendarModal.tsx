@@ -115,8 +115,11 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
         
         // Chamar API para criar calendário (sem user_id - será obtido do token)
         const response = await apiRequest(API_ROUTES.CALENDARS.CREATE, {
-          company_name: companyName,
-          start_month: startMonth
+          method: 'POST',
+          body: JSON.stringify({
+            company_name: companyName,
+            start_month: startMonth
+          })
         });
         
         if (response.success) {
@@ -148,7 +151,7 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
             ...settings,
             companyName: companyName, // Usar o nome processado
             uniqueUrl: response.calendar.unique_url || '',
-            calendarId: response.calendar.id, // Corrigido: acessar response.calendar.id
+            calendarId: response.calendar.id,
           } as CalendarSettings);
           
           // Fechar o modal automaticamente após criar com sucesso
@@ -157,7 +160,7 @@ export const CreateCalendarModal = ({ open, onClose, onCreateCalendar }: CreateC
           // Mostrar mensagem de sucesso
           toast({
             title: "✅ Calendário criado!",
-            description: `Calendário "${response.calendar.company_name}" foi criado com sucesso!`,
+            description: `Calendário "${response.calendar.company_name || response.calendar.name}" foi criado com sucesso!`,
           });
           
           // Resetar o formulário
