@@ -3,6 +3,77 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/supabase-client');
 
+// 🔍 ROTA DE TESTE - Verificar estrutura da tabela tasks
+router.get('/test-table', async (req, res) => {
+    try {
+        console.log('🔍 TASKS TEST: Verificando estrutura da tabela tasks...');
+        
+        // Teste 1: Verificar se a tabela existe
+        const { data: tableExists, error: tableError } = await supabase
+            .from('tasks')
+            .select('id')
+            .limit(1);
+        
+        console.log('🔍 TASKS TEST: Teste de existência - data:', tableExists);
+        console.log('🔍 TASKS TEST: Teste de existência - error:', tableError);
+        
+        // Teste 2: Verificar estrutura da tabela
+        const { data: structure, error: structureError } = await supabase
+            .rpc('get_table_info', { table_name: 'tasks' })
+            .catch(err => ({ data: null, error: err }));
+        
+        console.log('🔍 TASKS TEST: Estrutura da tabela - data:', structure);
+        console.log('🔍 TASKS TEST: Estrutura da tabela - error:', structureError);
+        
+        // Teste 3: Tentar inserir e deletar um registro de teste
+        let insertTest = { success: false, data: null, error: null };
+        try {
+            const { data: insertData, error: insertError } = await supabase
+                .from('tasks')
+                .insert([{
+                    title: 'Teste',
+                    description: 'Tarefa de teste',
+                    user_id: 1,
+                    calendar_id: 1,
+                    created_at: new Date().toISOString()
+                }])
+                .select();
+            
+            insertTest = { success: true, data: insertData, error: insertError };
+            
+            // Se inseriu com sucesso, deletar
+            if (insertData && insertData[0]) {
+                await supabase
+                    .from('tasks')
+                    .delete()
+                    .eq('id', insertData[0].id);
+            }
+        } catch (insertErr) {
+            insertTest = { success: false, data: null, error: insertErr };
+        }
+        
+        res.json({
+            success: true,
+            message: 'Teste da tabela tasks concluído',
+            table_test: {
+                exists: !tableError,
+                table_error: tableError,
+                structure: structure,
+                structure_error: structureError,
+                insert_test: insertTest
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ TASKS TEST ERROR:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro no teste da tabela tasks',
+            error: error.message
+        });
+    }
+});
+
 // Middleware de autenticação corrigido
 const authenticateUser = async (req, res, next) => {
     try {
@@ -127,8 +198,37 @@ router.post('/', authenticateUser, async (req, res) => {
 // READ - Listar todas as tarefas do usuário
 router.get('/', authenticateUser, async (req, res) => {
     try {
+        console.log('🔍 TASKS DEBUG: Iniciando listagem de tarefas');
         const user_id = req.user.id;
         const { calendar_id, status, priority } = req.query;
+        
+        console.log('🔍 TASKS DEBUG: Parâmetros recebidos:', {
+            user_id,
+            calendar_id,
+            status,
+            priority
+        });
+        
+        // 🔍 DEBUG: Primeiro vamos testar se a tabela tasks existe
+        console.log('🔍 TASKS DEBUG: Testando se tabela tasks existe...');
+        const { data: tableTest, error: tableError } = await supabase
+            .from('tasks')
+            .select('id')
+            .limit(1);
+        
+        console.log('🔍 TASKS DEBUG: Teste da tabela - data:', tableTest);
+        console.log('🔍 TASKS DEBUG: Teste da tabela - error:', tableError);
+        
+        if (tableError) {
+            console.error('❌ TASKS ERROR: Tabela tasks não existe ou erro de acesso:', tableError);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro: Tabela tasks não encontrada',
+                error: tableError.message
+            });
+        }
+        
+        console.log('🔍 TASKS DEBUG: Tabela tasks existe, continuando com query...');
         
         let query = supabase
             .from('tasks')
@@ -147,9 +247,16 @@ router.get('/', authenticateUser, async (req, res) => {
         if (status) query = query.eq('status', status);
         if (priority) query = query.eq('priority', priority);
         
+        console.log('🔍 TASKS DEBUG: Query construída, executando...');
+        
         const { data, error } = await query.order('created_at', { ascending: false });
         
+        console.log('🔍 TASKS DEBUG: Resposta da query - data:', data);
+        console.log('🔍 TASKS DEBUG: Resposta da query - error:', error);
+        
         if (error) throw error;
+        
+        console.log('✅ TASKS DEBUG: Tarefas carregadas com sucesso, total:', data?.length || 0);
         
         res.json({
             success: true,
@@ -158,7 +265,8 @@ router.get('/', authenticateUser, async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Erro ao listar tarefas:', error);
+        console.error('❌ TASKS ERROR: Erro ao listar tarefas:', error);
+        console.error('❌ TASKS ERROR: Stack trace:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Erro ao listar tarefas',
