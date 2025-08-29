@@ -35,7 +35,6 @@ router.get('/test-table', async (req, res) => {
             start_month: '2025-01',
             description: 'Teste de estrutura da tabela',
             color: '#FF0000',
-            is_public: false,
             user_id: 1, // ID de teste
             unique_url: 'teste-temporario-' + Date.now(),
             created_at: new Date().toISOString()
@@ -142,7 +141,7 @@ const authenticateUser = async (req, res, next) => {
 // CREATE - Criar novo calendário
 router.post('/', authenticateUser, async (req, res) => {
     try {
-        const { company_name, start_month, name, description, color, is_public } = req.body;
+        const { company_name, start_month, name, description, color } = req.body;
         const user_id = req.user.id;
         
         console.log('🔍 API DEBUG: Iniciando criação de calendário');
@@ -172,7 +171,6 @@ router.post('/', authenticateUser, async (req, res) => {
             name: calendarName,
             description: description || '',
             color: color || '#3B82F6',
-            is_public: is_public || false,
             user_id,
             unique_url: uniqueUrl,
             created_at: new Date().toISOString()
@@ -189,7 +187,6 @@ router.post('/', authenticateUser, async (req, res) => {
                     name: calendarName,  // Manter compatibilidade
                     description: description || '',
                     color: color || '#3B82F6',
-                    is_public: is_public || false,
                     user_id,
                     unique_url: uniqueUrl,  // Adicionar unique_url
                     created_at: new Date().toISOString()
@@ -310,7 +307,7 @@ router.get('/:id', authenticateUser, async (req, res) => {
 router.put('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, color, is_public } = req.body;
+        const { name, description, color } = req.body;
         const user_id = req.user.id;
         
         // Verificar se o calendário existe e pertence ao usuário
@@ -332,7 +329,6 @@ router.put('/:id', authenticateUser, async (req, res) => {
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (color !== undefined) updateData.color = color;
-        if (is_public !== undefined) updateData.is_public = is_public;
         
         updateData.updated_at = new Date().toISOString();
         
