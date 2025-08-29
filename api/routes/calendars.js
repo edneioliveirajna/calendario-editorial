@@ -26,13 +26,42 @@ router.get('/test-table', async (req, res) => {
             });
         }
         
-        // Tentar obter informações da tabela
-        const { data: tableInfo, error: tableError } = await supabase
-            .rpc('get_table_info', { table_name: 'calendars' })
-            .catch(() => ({ data: null, error: 'RPC não disponível' }));
+        // Teste adicional: tentar inserir um registro de teste (será revertido)
+        console.log('🔍 API DEBUG: Testando inserção de teste...');
         
-        console.log('🔍 API DEBUG: Info da tabela:', tableInfo);
-        console.log('🔍 API DEBUG: Erro da tabela:', tableError);
+        const testData = {
+            name: 'TESTE_TEMPORARIO',
+            company_name: 'TESTE_TEMPORARIO',
+            start_month: '2025-01',
+            description: 'Teste de estrutura da tabela',
+            color: '#FF0000',
+            is_public: false,
+            user_id: 1, // ID de teste
+            unique_url: 'teste-temporario-' + Date.now(),
+            created_at: new Date().toISOString()
+        };
+        
+        console.log('🔍 API DEBUG: Dados de teste para inserção:', testData);
+        
+        const { data: insertData, error: insertError } = await supabase
+            .from('calendars')
+            .insert([testData])
+            .select();
+        
+        console.log('🔍 API DEBUG: Teste de inserção - data:', insertData);
+        console.log('🔍 API DEBUG: Teste de inserção - error:', insertError);
+        
+        // Se a inserção funcionou, deletar o registro de teste
+        if (insertData && insertData.length > 0) {
+            console.log('🔍 API DEBUG: Inserção de teste funcionou, deletando...');
+            
+            const { error: deleteError } = await supabase
+                .from('calendars')
+                .delete()
+                .eq('id', insertData[0].id);
+            
+            console.log('🔍 API DEBUG: Deleção de teste - error:', deleteError);
+        }
         
         res.json({
             success: true,
@@ -40,8 +69,11 @@ router.get('/test-table', async (req, res) => {
             table_test: {
                 select_works: !error,
                 data_returned: data,
-                table_info: tableInfo,
-                table_error: tableError
+                insert_test: {
+                    works: !insertError,
+                    data: insertData,
+                    error: insertError
+                }
             }
         });
         
