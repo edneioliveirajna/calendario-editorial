@@ -3,6 +3,58 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/supabase-client');
 
+// TESTE - Verificar estrutura da tabela (PUBLICA - sem autenticação)
+router.get('/test-table', async (req, res) => {
+    try {
+        console.log('🔍 API DEBUG: Testando estrutura da tabela calendars');
+        
+        // Tentar fazer um select simples para ver a estrutura
+        const { data, error } = await supabase
+            .from('calendars')
+            .select('*')
+            .limit(1);
+        
+        console.log('🔍 API DEBUG: Teste de select - data:', data);
+        console.log('🔍 API DEBUG: Teste de select - error:', error);
+        
+        if (error) {
+            console.error('❌ API ERROR: Erro ao testar tabela:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro ao testar tabela',
+                error: error.message
+            });
+        }
+        
+        // Tentar obter informações da tabela
+        const { data: tableInfo, error: tableError } = await supabase
+            .rpc('get_table_info', { table_name: 'calendars' })
+            .catch(() => ({ data: null, error: 'RPC não disponível' }));
+        
+        console.log('🔍 API DEBUG: Info da tabela:', tableInfo);
+        console.log('🔍 API DEBUG: Erro da tabela:', tableError);
+        
+        res.json({
+            success: true,
+            message: 'Teste da tabela concluído',
+            table_test: {
+                select_works: !error,
+                data_returned: data,
+                table_info: tableInfo,
+                table_error: tableError
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ API ERROR: Erro no teste da tabela:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro no teste da tabela',
+            error: error.message
+        });
+    }
+});
+
 // Middleware de autenticação corrigido
 const authenticateUser = async (req, res, next) => {
     try {
@@ -152,57 +204,7 @@ router.post('/', authenticateUser, async (req, res) => {
     }
 });
 
-// TESTE - Verificar estrutura da tabela (temporário)
-router.get('/test-table', async (req, res) => {
-    try {
-        console.log('🔍 API DEBUG: Testando estrutura da tabela calendars');
-        
-        // Tentar fazer um select simples para ver a estrutura
-        const { data, error } = await supabase
-            .from('calendars')
-            .select('*')
-            .limit(1);
-        
-        console.log('🔍 API DEBUG: Teste de select - data:', data);
-        console.log('🔍 API DEBUG: Teste de select - error:', error);
-        
-        if (error) {
-            console.error('❌ API ERROR: Erro ao testar tabela:', error);
-            return res.status(500).json({
-                success: false,
-                message: 'Erro ao testar tabela',
-                error: error.message
-            });
-        }
-        
-        // Tentar obter informações da tabela
-        const { data: tableInfo, error: tableError } = await supabase
-            .rpc('get_table_info', { table_name: 'calendars' })
-            .catch(() => ({ data: null, error: 'RPC não disponível' }));
-        
-        console.log('🔍 API DEBUG: Info da tabela:', tableInfo);
-        console.log('🔍 API DEBUG: Erro da tabela:', tableError);
-        
-        res.json({
-            success: true,
-            message: 'Teste da tabela concluído',
-            table_test: {
-                select_works: !error,
-                data_returned: data,
-                table_info: tableInfo,
-                table_error: tableError
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ API ERROR: Erro no teste da tabela:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro no teste da tabela',
-            error: error.message
-        });
-    }
-});
+// Rota de teste removida (movida para cima, antes do middleware)
 
 // READ - Listar todos os calendários do usuário
 router.get('/', authenticateUser, async (req, res) => {
