@@ -72,6 +72,84 @@ app.get('/test-db', async (req, res) => {
     }
 });
 
+// Rota de teste de banco com múltiplas configurações
+app.get('/test-db-advanced', async (req, res) => {
+    const { Pool } = require('pg');
+    
+    // Testar diferentes configurações
+    const configs = [
+        {
+            name: 'Configuração atual (IPv6)',
+            config: {
+                user: process.env.DB_USER,
+                host: process.env.DB_HOST,
+                database: process.env.DB_NAME,
+                password: process.env.DB_PASS,
+                port: process.env.DB_PORT,
+                ssl: { rejectUnauthorized: false },
+                family: 6
+            }
+        },
+        {
+            name: 'Configuração IPv4',
+            config: {
+                user: process.env.DB_USER,
+                host: process.env.DB_HOST,
+                database: process.env.DB_NAME,
+                password: process.env.DB_PASS,
+                port: process.env.DB_PORT,
+                ssl: { rejectUnauthorized: false },
+                family: 4
+            }
+        },
+        {
+            name: 'Configuração sem família específica',
+            config: {
+                user: process.env.DB_USER,
+                host: process.env.DB_HOST,
+                database: process.env.DB_NAME,
+                password: process.env.DB_PASS,
+                port: process.env.DB_PORT,
+                ssl: { rejectUnauthorized: false }
+            }
+        }
+    ];
+    
+    const results = [];
+    
+    for (const testConfig of configs) {
+        try {
+            console.log(`🧪 Testando: ${testConfig.name}`);
+            const testPool = new Pool(testConfig.config);
+            const client = await testPool.connect();
+            const result = await client.query('SELECT NOW() as current_time');
+            client.release();
+            await testPool.end();
+            
+            results.push({
+                config: testConfig.name,
+                success: true,
+                message: '✅ Conexão funcionou!',
+                data: result.rows[0]
+            });
+        } catch (error) {
+            results.push({
+                config: testConfig.name,
+                success: false,
+                message: '❌ Falhou',
+                error: error.message
+            });
+        }
+    }
+    
+    res.json({
+        success: true,
+        message: '🧪 Teste de múltiplas configurações',
+        timestamp: new Date().toISOString(),
+        results: results
+    });
+});
+
 // Rota de debug detalhado
 app.get('/debug', (req, res) => {
     try {

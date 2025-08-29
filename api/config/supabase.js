@@ -18,9 +18,13 @@ const supabaseConfig = {
         const dns = require('dns');
         dns.lookup(hostname, { family: 6 }, callback);
     },
+    // Configurações de conexão mais robustas
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    // Tentar múltiplas tentativas de conexão
+    retryDelay: 1000,
+    maxRetries: 3,
 };
 
 // Pool de conexões
