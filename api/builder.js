@@ -150,6 +150,145 @@ app.get('/test-db-advanced', async (req, res) => {
     });
 });
 
+// Rota de teste de conectividade avançada
+app.get('/test-connectivity', async (req, res) => {
+    const dns = require('dns');
+    const net = require('net');
+    const { Pool } = require('pg');
+    
+    const hostname = process.env.DB_HOST;
+    const port = process.env.DB_PORT;
+    
+    const tests = [];
+    
+    // Teste 1: Resolução DNS
+    try {
+        const addresses = await new Promise((resolve, reject) => {
+            dns.resolve4(hostname, (err, addresses) => {
+                if (err) reject(err);
+                else resolve(addresses);
+            });
+        });
+        tests.push({
+            test: 'Resolução DNS IPv4',
+            success: true,
+            message: `✅ Resolvido para: ${addresses.join(', ')}`
+        });
+    } catch (error) {
+        tests.push({
+            test: 'Resolução DNS IPv4',
+            success: false,
+            message: `❌ Falhou: ${error.message}`
+        });
+    }
+    
+    // Teste 2: Resolução DNS IPv6
+    try {
+        const addresses = await new Promise((resolve, reject) => {
+            dns.resolve6(hostname, (err, addresses) => {
+                if (err) reject(err);
+                else resolve(addresses);
+            });
+        });
+        tests.push({
+            test: 'Resolução DNS IPv6',
+            success: true,
+            message: `✅ Resolvido para: ${addresses.join(', ')}`
+        });
+    } catch (error) {
+        tests.push({
+            test: 'Resolução DNS IPv6',
+            success: false,
+            message: `❌ Falhou: ${error.message}`
+        });
+    }
+    
+    // Teste 3: Teste de conectividade TCP
+    try {
+        const socket = new net.Socket();
+        const connected = await new Promise((resolve) => {
+            socket.setTimeout(5000);
+            socket.on('connect', () => {
+                socket.destroy();
+                resolve(true);
+            });
+            socket.on('timeout', () => {
+                socket.destroy();
+                resolve(false);
+            });
+            socket.on('error', () => {
+                socket.destroy();
+                resolve(false);
+            });
+            socket.connect(port, hostname);
+        });
+        
+        tests.push({
+            test: 'Conectividade TCP',
+            success: connected,
+            message: connected ? '✅ Porta acessível' : '❌ Porta não acessível'
+        });
+    } catch (error) {
+        tests.push({
+            test: 'Conectividade TCP',
+            success: false,
+            message: `❌ Erro: ${error.message}`
+        });
+    }
+    
+    // Teste 4: Teste com pooler Supabase (porta 6543)
+    try {
+        const poolerConfig = {
+            user: process.env.DB_USER,
+            host: process.env.DB_HOST,
+            database: process.env.DB_NAME,
+            password: process.env.DB_PASS,
+            port: 6543, // Pooler do Supabase
+            ssl: { rejectUnauthorized: false }
+        };
+        
+        const testPool = new Pool(poolerConfig);
+        const client = await testPool.connect();
+        const result = await client.query('SELECT NOW() as current_time');
+        client.release();
+        await testPool.end();
+        
+        tests.push({
+            test: 'Conexão via Pooler (porta 6543)',
+            success: true,
+            message: '✅ Conexão funcionou via pooler!',
+            data: result.rows[0]
+        });
+    } catch (error) {
+        tests.push({
+            test: 'Conexão via Pooler (porta 6543)',
+            success: false,
+            message: `❌ Falhou: ${error.message}`
+        });
+    }
+    
+    // Teste 5: Informações do hostname
+    tests.push({
+        test: 'Informações do Hostname',
+        success: true,
+        message: `Hostname: ${hostname}, Porta: ${port}`,
+        details: {
+            hostname: hostname,
+            port: port,
+            user: process.env.DB_USER,
+            database: process.env.DB_NAME
+        }
+    });
+    
+    res.json({
+        success: true,
+        message: '🔍 Teste de conectividade avançada',
+        timestamp: new Date().toISOString(),
+        hostname: hostname,
+        tests: tests
+    });
+});
+
 // Rota de debug detalhado
 app.get('/debug', (req, res) => {
     try {
