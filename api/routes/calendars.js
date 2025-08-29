@@ -61,10 +61,15 @@ router.post('/', authenticateUser, async (req, res) => {
         const { company_name, start_month, name, description, color, is_public } = req.body;
         const user_id = req.user.id;
         
+        console.log('🔍 API DEBUG: Iniciando criação de calendário');
+        console.log('🔍 API DEBUG: Dados recebidos:', { company_name, start_month, name, description, color, is_public });
+        console.log('🔍 API DEBUG: User ID:', user_id);
+        
         // Usar company_name se fornecido, senão usar name
         const calendarName = company_name || name;
         
         if (!calendarName) {
+            console.log('❌ API DEBUG: Nome do calendário não fornecido');
             return res.status(400).json({
                 success: false,
                 message: 'Nome da empresa ou nome do calendário é obrigatório'
@@ -76,6 +81,20 @@ router.post('/', authenticateUser, async (req, res) => {
             .replace(/[^a-z0-9]/g, '-')
             .replace(/-+/g, '-')
             .replace(/^-|-$/g, '') + '-' + Date.now();
+        
+        console.log('🔍 API DEBUG: Dados para inserção:', {
+            company_name: calendarName,
+            start_month: start_month || null,
+            name: calendarName,
+            description: description || '',
+            color: color || '#3B82F6',
+            is_public: is_public || false,
+            user_id,
+            unique_url: uniqueUrl,
+            created_at: new Date().toISOString()
+        });
+        
+        console.log('🔍 API DEBUG: Chamando Supabase insert...');
         
         const { data, error } = await supabase
             .from('calendars')
@@ -94,7 +113,27 @@ router.post('/', authenticateUser, async (req, res) => {
             ])
             .select();
         
-        if (error) throw error;
+        console.log('🔍 API DEBUG: Resposta do Supabase - data:', data);
+        console.log('🔍 API DEBUG: Resposta do Supabase - error:', error);
+        console.log('🔍 API DEBUG: Tipo de data:', typeof data);
+        console.log('🔍 API DEBUG: Data é array?', Array.isArray(data));
+        console.log('🔍 API DEBUG: Tamanho de data:', data ? data.length : 'undefined');
+        
+        if (error) {
+            console.error('❌ API ERROR: Erro do Supabase:', error);
+            throw error;
+        }
+        
+        if (!data || data.length === 0) {
+            console.error('❌ API ERROR: Supabase retornou dados vazios após inserção');
+            return res.status(500).json({
+                success: false,
+                message: 'Erro: Calendário não foi criado no banco de dados'
+            });
+        }
+        
+        console.log('✅ API DEBUG: Calendário criado com sucesso no banco');
+        console.log('✅ API DEBUG: Dados retornados:', data[0]);
         
         res.status(201).json({
             success: true,
@@ -103,10 +142,63 @@ router.post('/', authenticateUser, async (req, res) => {
         });
         
     } catch (error) {
-        console.error('❌ Erro ao criar calendário:', error);
+        console.error('❌ API ERROR: Erro ao criar calendário:', error);
+        console.error('❌ API ERROR: Stack trace:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Erro ao criar calendário',
+            error: error.message
+        });
+    }
+});
+
+// TESTE - Verificar estrutura da tabela (temporário)
+router.get('/test-table', async (req, res) => {
+    try {
+        console.log('🔍 API DEBUG: Testando estrutura da tabela calendars');
+        
+        // Tentar fazer um select simples para ver a estrutura
+        const { data, error } = await supabase
+            .from('calendars')
+            .select('*')
+            .limit(1);
+        
+        console.log('🔍 API DEBUG: Teste de select - data:', data);
+        console.log('🔍 API DEBUG: Teste de select - error:', error);
+        
+        if (error) {
+            console.error('❌ API ERROR: Erro ao testar tabela:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro ao testar tabela',
+                error: error.message
+            });
+        }
+        
+        // Tentar obter informações da tabela
+        const { data: tableInfo, error: tableError } = await supabase
+            .rpc('get_table_info', { table_name: 'calendars' })
+            .catch(() => ({ data: null, error: 'RPC não disponível' }));
+        
+        console.log('🔍 API DEBUG: Info da tabela:', tableInfo);
+        console.log('🔍 API DEBUG: Erro da tabela:', tableError);
+        
+        res.json({
+            success: true,
+            message: 'Teste da tabela concluído',
+            table_test: {
+                select_works: !error,
+                data_returned: data,
+                table_info: tableInfo,
+                table_error: tableError
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ API ERROR: Erro no teste da tabela:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro no teste da tabela',
             error: error.message
         });
     }
