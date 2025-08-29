@@ -17,13 +17,10 @@ router.get('/test-table', async (req, res) => {
         console.log('🔍 TASKS TEST: Teste de existência - data:', tableExists);
         console.log('🔍 TASKS TEST: Teste de existência - error:', tableError);
         
-        // Teste 2: Verificar estrutura da tabela
-        const { data: structure, error: structureError } = await supabase
-            .rpc('get_table_info', { table_name: 'tasks' })
-            .catch(err => ({ data: null, error: err }));
-        
-        console.log('🔍 TASKS TEST: Estrutura da tabela - data:', structure);
-        console.log('🔍 TASKS TEST: Estrutura da tabela - error:', structureError);
+        // Teste 2: Verificar estrutura da tabela (sem usar RPC)
+        console.log('🔍 TASKS TEST: Pulando verificação de estrutura (RPC não disponível)');
+        const structure = null;
+        const structureError = null;
         
         // Teste 3: Tentar inserir e deletar um registro de teste
         let insertTest = { success: false, data: null, error: null };
