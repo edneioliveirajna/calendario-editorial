@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuthStatus = async () => {
     try {
       console.log('🔍 Verificando status de autenticação...');
-      const token = localStorage.getItem('auth_token');
-      const savedUser = localStorage.getItem('auth_user');
+      const token = localStorage.getItem('authToken');
+      const savedUser = localStorage.getItem('authUser');
       
       console.log('📱 Token encontrado:', !!token);
       console.log('👤 Usuário salvo:', !!savedUser);
@@ -54,8 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           verifyTokenInBackground(token);
         } catch (error) {
           console.error('❌ Erro ao restaurar usuário do localStorage:', error);
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_user');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
           setIsLoading(false);
         }
       } else {
@@ -121,8 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Salvar token e dados do usuário
         console.log('✅ Login bem-sucedido, salvando dados...');
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('authUser', JSON.stringify(data.user));
         console.log('💾 Dados salvos no localStorage');
         setUser(data.user);
         return true;
@@ -159,8 +159,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('selectedCalendarId');
         
         // Salvar token e dados do usuário
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('authUser', JSON.stringify(data.user));
         setUser(data.user);
         return { success: true };
       } else {
@@ -183,8 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Função de logout
   const logout = () => {
     console.log('🚪 Fazendo logout, limpando localStorage...');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
     
     // Limpar também o calendário selecionado
     localStorage.removeItem('selectedCalendarId');
