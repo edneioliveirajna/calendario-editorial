@@ -56,6 +56,7 @@ export const API_ROUTES = {
   // Tarefas
   TASKS: {
     LIST: '/tasks',
+    READ: '/tasks',
     CREATE: '/tasks',
     UPDATE: (id) => `/tasks/${id}`,
     DELETE: (id) => `/tasks/${id}`,
