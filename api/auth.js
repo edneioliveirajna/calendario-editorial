@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const pool = require('./config/database');
+const { supabase } = require('./config/supabase-client');
 
 const router = express.Router();
 
@@ -16,6 +16,7 @@ router.post('/register', async (req, res) => {
         // Validação dos dados
         if (!email || !password) {
             return res.status(400).json({
+                success: false,
                 error: 'Dados incompletos',
                 message: 'Email e senha são obrigatórios'
             });
@@ -25,13 +26,15 @@ router.post('/register', async (req, res) => {
         const finalName = company_name || name || email.split('@')[0];
 
         // Verificar se o usuário já existe
-        const userExists = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
-            [email]
-        );
+        const { data: existingUser, error: userCheckError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .single();
 
-        if (userExists.rows.length > 0) {
+        if (existingUser && !userCheckError) {
             return res.status(400).json({
+                success: false,
                 error: 'Usuário já existe',
                 message: 'Este email já está cadastrado'
             });
@@ -42,35 +45,52 @@ router.post('/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, saltRounds);
 
         // Criar usuário
-        const newUser = await pool.query(
-            'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, created_at',
-            [finalName, email, passwordHash]
-        );
+        const { data: newUser, error: createError } = await supabase
+            .from('users')
+            .insert([
+                {
+                    name: finalName,
+                    email: email,
+                    password_hash: passwordHash,
+                    created_at: new Date().toISOString()
+                }
+            ])
+            .select('id, name, email, created_at')
+            .single();
 
-        const user = newUser.rows[0];
+        if (createError) throw createError;
 
         // Gerar token JWT
         const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            { userId: newUser.id, email: newUser.email },
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
 
-        // Salvar token no banco
-        await pool.query(
-            'INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-            [user.id, token, new Date(Date.now() + 24 * 60 * 60 * 1000)]
-        );
+        // Salvar token no banco (se a tabela existir)
+        try {
+            await supabase
+                .from('user_tokens')
+                .insert([
+                    {
+                        user_id: newUser.id,
+                        token: token,
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ]);
+        } catch (tokenError) {
+            console.log('Tabela user_tokens não existe, pulando salvamento do token');
+        }
 
         // Retornar resposta
         res.status(201).json({
             success: true,
             message: 'Usuário criado com sucesso',
             user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                company_name: user.name // Compatibilidade com frontend
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                company_name: newUser.name // Compatibilidade com frontend
             },
             token: token
         });
@@ -78,8 +98,10 @@ router.post('/register', async (req, res) => {
     } catch (error) {
         console.error('Erro no registro:', error);
         res.status(500).json({
+            success: false,
             error: 'Erro interno do servidor',
-            message: 'Não foi possível criar o usuário'
+            message: 'Não foi possível criar o usuário',
+            details: error.message
         });
     }
 });
@@ -94,30 +116,32 @@ router.post('/login', async (req, res) => {
         // Validação dos dados
         if (!email || !password) {
             return res.status(400).json({
+                success: false,
                 error: 'Dados incompletos',
                 message: 'Email e senha são obrigatórios'
             });
         }
 
         // Buscar usuário
-        const userResult = await pool.query(
-            'SELECT id, name, email, password_hash FROM users WHERE email = $1',
-            [email]
-        );
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id, name, email, password_hash')
+            .eq('email', email)
+            .single();
 
-        if (userResult.rows.length === 0) {
+        if (userError || !user) {
             return res.status(401).json({
+                success: false,
                 error: 'Credenciais inválidas',
                 message: 'Email ou senha incorretos'
             });
         }
 
-        const user = userResult.rows[0];
-
         // Verificar senha
         const passwordValid = await bcrypt.compare(password, user.password_hash);
         if (!passwordValid) {
             return res.status(401).json({
+                success: false,
                 error: 'Credenciais inválidas',
                 message: 'Email ou senha incorretos'
             });
@@ -126,15 +150,24 @@ router.post('/login', async (req, res) => {
         // Gerar token JWT
         const token = jwt.sign(
             { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
         );
 
-        // Salvar token no banco
-        await pool.query(
-            'INSERT INTO user_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-            [user.id, token, new Date(Date.now() + 24 * 60 * 60 * 1000)]
-        );
+        // Salvar token no banco (se a tabela existir)
+        try {
+            await supabase
+                .from('user_tokens')
+                .insert([
+                    {
+                        user_id: user.id,
+                        token: token,
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    }
+                ]);
+        } catch (tokenError) {
+            console.log('Tabela user_tokens não existe, pulando salvamento do token');
+        }
 
         // Retornar resposta
         res.json({
@@ -152,8 +185,10 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Erro no login:', error);
         res.status(500).json({
+            success: false,
             error: 'Erro interno do servidor',
-            message: 'Não foi possível realizar o login'
+            message: 'Não foi possível realizar o login',
+            details: error.message
         });
     }
 });
@@ -167,28 +202,29 @@ router.get('/verify', async (req, res) => {
 
         if (!token) {
             return res.status(401).json({
+                success: false,
                 error: 'Token não fornecido',
                 message: 'Token de autenticação é obrigatório'
             });
         }
 
         // Verificar token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
         
         // Buscar usuário
-        const userResult = await pool.query(
-            'SELECT id, name, email FROM users WHERE id = $1',
-            [decoded.userId]
-        );
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .eq('id', decoded.userId)
+            .single();
 
-        if (userResult.rows.length === 0) {
+        if (userError || !user) {
             return res.status(401).json({
+                success: false,
                 error: 'Usuário não encontrado',
                 message: 'Token inválido'
             });
         }
-
-        const user = userResult.rows[0];
 
         res.json({
             success: true,
@@ -203,8 +239,49 @@ router.get('/verify', async (req, res) => {
     } catch (error) {
         console.error('Erro na verificação:', error);
         res.status(401).json({
+            success: false,
             error: 'Token inválido',
             message: 'Token expirado ou inválido'
+        });
+    }
+});
+
+// ========================================
+// ROTA: LOGOUT (OPCIONAL)
+// ========================================
+router.post('/logout', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token não fornecido',
+                message: 'Token de autenticação é obrigatório'
+            });
+        }
+
+        // Invalidar token (se a tabela existir)
+        try {
+            await supabase
+                .from('user_tokens')
+                .delete()
+                .eq('token', token);
+        } catch (tokenError) {
+            console.log('Tabela user_tokens não existe, pulando invalidação do token');
+        }
+
+        res.json({
+            success: true,
+            message: 'Logout realizado com sucesso'
+        });
+
+    } catch (error) {
+        console.error('Erro no logout:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor',
+            message: 'Não foi possível realizar o logout'
         });
     }
 });
