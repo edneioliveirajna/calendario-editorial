@@ -289,6 +289,40 @@ app.get('/test-connectivity', async (req, res) => {
     });
 });
 
+// Rota de teste usando Supabase Client
+app.get('/test-supabase-client', async (req, res) => {
+    try {
+        const { testConnection } = require('./config/supabase-client');
+        
+        const result = await testConnection();
+        
+        if (result) {
+            res.json({
+                success: true,
+                message: '✅ Conexão com Supabase Client funcionando!',
+                timestamp: new Date().toISOString(),
+                method: 'Supabase Client',
+                status: 'Conectado'
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: '❌ Falha na conexão com Supabase Client',
+                timestamp: new Date().toISOString(),
+                method: 'Supabase Client',
+                status: 'Falhou'
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '❌ Erro no teste do Supabase Client',
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // Rota de debug detalhado
 app.get('/debug', (req, res) => {
     try {
