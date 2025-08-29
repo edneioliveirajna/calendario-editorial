@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/supabase-client');
 
-// Middleware de autenticação (simples por enquanto)
+// Middleware de autenticação corrigido
 const authenticateUser = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -13,18 +14,39 @@ const authenticateUser = async (req, res, next) => {
             });
         }
         
-        // Verificar token com Supabase
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        // Verificar token JWT localmente
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        
+        // Verificar se o usuário existe no banco
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('id, email')
+            .eq('id', decoded.userId)
+            .single();
+        
         if (error || !user) {
             return res.status(401).json({ 
                 success: false, 
-                message: 'Token inválido' 
+                message: 'Usuário não encontrado' 
             });
         }
         
         req.user = user;
         next();
     } catch (error) {
+        if (error.name === 'JsonWebTokenError') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Token inválido' 
+            });
+        }
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Token expirado' 
+            });
+        }
+        
         res.status(500).json({ 
             success: false, 
             message: 'Erro na autenticação',
