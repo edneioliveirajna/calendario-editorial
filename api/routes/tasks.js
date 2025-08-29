@@ -30,8 +30,11 @@ router.get('/test-table', async (req, res) => {
                 .insert([{
                     title: 'Teste',
                     description: 'Tarefa de teste',
-                    user_id: 1,
                     calendar_id: 1,
+                    content_type: 'post',
+                    platforms: [],
+                    status: 'pending',
+                    scheduled_date: new Date().toISOString().split('T')[0],
                     created_at: new Date().toISOString()
                 }])
                 .select();
@@ -405,7 +408,6 @@ router.put('/:id', authenticateUser, async (req, res) => {
             .from('tasks')
             .update(updateData)
             .eq('id', id)
-            .eq('user_id', user_id)
             .select();
         
         if (error) throw error;
@@ -491,12 +493,12 @@ router.put('/:id/complete', authenticateUser, async (req, res) => {
         const { completed } = req.body;
         const user_id = req.user.id;
         
-        // Verificar se a tarefa existe e pertence ao usuário
+        // 🔍 DEBUG: Como não temos user_id na tabela tasks, vamos verificar
+        // se a tarefa existe pelo ID e se o calendário pertence ao usuário
         const { data: existing, error: checkError } = await supabase
             .from('tasks')
-            .select('id')
+            .select('id, calendar_id')
             .eq('id', id)
-            .eq('user_id', user_id)
             .single();
         
         if (checkError || !existing) {
@@ -506,15 +508,28 @@ router.put('/:id/complete', authenticateUser, async (req, res) => {
             });
         }
         
+        // 🔍 DEBUG: Verificar se o calendário da tarefa pertence ao usuário
+        const { data: calendar, error: calendarError } = await supabase
+            .from('calendars')
+            .select('id')
+            .eq('id', existing.calendar_id)
+            .eq('user_id', user_id)
+            .single();
+        
+        if (calendarError || !calendar) {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado a esta tarefa'
+            });
+        }
+        
         const { data, error } = await supabase
             .from('tasks')
             .update({
                 status: completed ? 'completed' : 'pending',
-                completed_at: completed ? new Date().toISOString() : null,
                 updated_at: new Date().toISOString()
             })
             .eq('id', id)
-            .eq('user_id', user_id)
             .select();
         
         if (error) throw error;
