@@ -86,7 +86,10 @@ export const buildApiUrl = (route) => {
 // Função para fazer requisições com tratamento de erro
 export const apiRequest = async (url, options = {}) => {
   try {
-    const response = await fetch(url, {
+    // Construir URL completa se for relativa
+    const fullUrl = url.startsWith('http') ? url : `${config.baseURL}${url}`;
+    
+    const response = await fetch(fullUrl, {
       ...options,
       headers: {
         ...apiConfig.headers,
