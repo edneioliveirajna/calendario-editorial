@@ -61,11 +61,25 @@ export const CalendarSelector = ({
     setLoading(true);
     try {
       const response = await apiRequest(API_ROUTES.CALENDARS.LIST);
+      console.log('🔍 DEBUG: Resposta da API:', response);
+      console.log('🔍 DEBUG: Tipo da resposta:', typeof response);
+      console.log('🔍 DEBUG: Chaves da resposta:', Object.keys(response));
+      
       if (response.success) {
+        // Verificar se há calendários na resposta
+        const calendarsData = response.calendars || response.data || [];
+        console.log('🔍 DEBUG: Dados dos calendários:', calendarsData);
+        
+        if (!Array.isArray(calendarsData)) {
+          console.error('❌ DEBUG: Dados não são um array:', calendarsData);
+          setCalendars([]);
+          return;
+        }
+        
         // Processar calendários para garantir que tenham created_at
         
         // GARANTIR que todos os calendários tenham created_at
-        const processedCalendars = response.calendars.map((cal: Calendar) => {
+        const processedCalendars = calendarsData.map((cal: Calendar) => {
           // Se não tem created_at, usar a data atual
           if (!cal.created_at) {
             return {
