@@ -76,7 +76,7 @@ export const EditCalendarModal = ({
         start_month: formData.start_month
       });
       
-      const response = await apiRequest(`${API_ROUTES.CALENDARS.UPDATE}/${calendar.id}`, {
+      const response = await apiRequest(API_ROUTES.CALENDARS.UPDATE(calendar.id), {
         method: 'PUT',
         body: JSON.stringify({
           company_name: formData.company_name.trim(),
@@ -95,7 +95,7 @@ export const EditCalendarModal = ({
           console.log('🔄 DEBUG: Forçando atualização completa...');
           
           // 1. Buscar calendário atualizado do backend
-          const updatedResponse = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${calendar.id}`);
+          const updatedResponse = await apiRequest(API_ROUTES.CALENDARS.READ(calendar.id));
           console.log('📥 DEBUG: Resposta do backend:', updatedResponse);
           
           if (updatedResponse.success && updatedResponse.calendar) {

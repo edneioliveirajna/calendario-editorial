@@ -130,10 +130,10 @@ const Index = () => {
     if (confirm('Tem certeza que deseja excluir este calendário? Todas as tarefas serão perdidas!')) {
       try {
         console.log('🔐 DEBUG: Usuário confirmou exclusão, fazendo requisição...');
-        console.log('   URL:', `${API_ROUTES.CALENDARS.DELETE}/${calendarId}`);
+        console.log('   URL:', API_ROUTES.CALENDARS.DELETE(calendarId));
         console.log('   Método: DELETE');
         
-        const response = await apiRequest(`${API_ROUTES.CALENDARS.DELETE}/${calendarId}`, {
+        const response = await apiRequest(API_ROUTES.CALENDARS.DELETE(calendarId), {
           method: 'DELETE',
           body: JSON.stringify({ id: calendarId })
         });
@@ -507,7 +507,7 @@ const Index = () => {
   // Função para buscar dados do calendário atual
   const loadCalendarData = async () => {
     try {
-      const response = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${currentCalendarId}`);
+              const response = await apiRequest(API_ROUTES.CALENDARS.READ(currentCalendarId));
       if (response.success && response.calendar) {
         setCompanyName(response.calendar.company_name || '');
         setStartMonth(response.calendar.start_month || '');
@@ -607,7 +607,7 @@ const Index = () => {
       const loadSavedCalendar = async () => {
         try {
           console.log('📡 INDEX: Fazendo requisição para calendário salvo...');
-          const response = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${savedCalendarId}`);
+          const response = await apiRequest(API_ROUTES.CALENDARS.READ(savedCalendarId));
           console.log('✅ INDEX: Resposta da API para calendário salvo:', response);
           
           if (response.success && response.data) {
