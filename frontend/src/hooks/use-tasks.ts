@@ -23,7 +23,7 @@ export const useTasks = (calendarId: number = 1) => {
       
       if (response.success) {
         // Converter datas do backend para objetos Date
-        const tasksWithDates = response.tasks.map((task: any) => {
+        const tasksWithDates = (response.data || []).map((task: any) => {
           // Garantir que a data seja interpretada como local, não UTC
           let localDate: Date;
           
@@ -84,7 +84,7 @@ export const useTasks = (calendarId: number = 1) => {
       
       if (response.success) {
         const newTask: CalendarTask = {
-          id: response.task.id.toString(),
+          id: response.data.id.toString(),
           title: taskData.title,
           contentType: taskData.contentType,
           platforms: taskData.platforms,
@@ -260,7 +260,7 @@ export const useTasks = (calendarId: number = 1) => {
           description: `Tarefa movida para ${formattedDisplayDate}!`,
         });
         
-        return response.task;
+        return response.data;
       } else {
         throw new Error(response.error || 'Erro ao mover tarefa');
       }
