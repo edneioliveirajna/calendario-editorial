@@ -32,10 +32,18 @@ export const CreateTaskModal = ({ open, onClose, onTaskCreated, selectedDate, ca
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 MODAL DEBUG: handleSubmit iniciado');
+    console.log('📝 MODAL DEBUG: Dados do formulário:', taskData);
+    console.log('📅 MODAL DEBUG: Data selecionada:', selectedDate);
+    console.log('📅 MODAL DEBUG: Calendar ID:', calendarId);
+    
     if (taskData.title && taskData.contentType && taskData.platforms.length > 0) {
+      console.log('✅ MODAL DEBUG: Validação passou, iniciando criação...');
       setIsLoading(true);
       
       try {
+        console.log('📡 MODAL DEBUG: Chamando createTask...');
+        
         // Usar o hook createTask que atualiza o estado automaticamente
         const newTask = await createTask({
           title: taskData.title,
@@ -46,6 +54,7 @@ export const CreateTaskModal = ({ open, onClose, onTaskCreated, selectedDate, ca
           description: taskData.description
         });
         
+        console.log('✅ MODAL DEBUG: Tarefa criada com sucesso:', newTask);
         onTaskCreated(newTask);
         onClose();
         
@@ -58,7 +67,7 @@ export const CreateTaskModal = ({ open, onClose, onTaskCreated, selectedDate, ca
           description: ''
         });
       } catch (error) {
-        console.error('Erro ao criar tarefa:', error);
+        console.error('❌ MODAL DEBUG: Erro capturado:', error);
         toast({
           title: "❌ Erro!",
           description: "Falha ao criar tarefa. Tente novamente.",
@@ -67,6 +76,8 @@ export const CreateTaskModal = ({ open, onClose, onTaskCreated, selectedDate, ca
       } finally {
         setIsLoading(false);
       }
+    } else {
+      console.log('❌ MODAL DEBUG: Validação falhou');
     }
   };
 
