@@ -48,6 +48,15 @@ export const CalendarSelector = ({
   onDropdownClose
 }: CalendarSelectorProps) => {
   
+  // ✅ DEBUG: Verificar props recebidas
+  console.log('🔍 DEBUG: CalendarSelector props recebidas:');
+  console.log('   onEditCalendar existe:', !!onEditCalendar);
+  console.log('   onDeleteCalendar existe:', !!onDeleteCalendar);
+  console.log('   onDuplicateCalendar existe:', !!onDuplicateCalendar);
+  console.log('   onShareCalendar existe:', !!onShareCalendar);
+  console.log('   onEditCalendar tipo:', typeof onEditCalendar);
+  console.log('   onDeleteCalendar tipo:', typeof onDeleteCalendar);
+  
 
   
   const [calendars, setCalendars] = useState<Calendar[]>([]);
@@ -316,8 +325,13 @@ export const CalendarSelector = ({
                         size="sm"
                         className="h-6 w-6 p-0 hover:bg-gray-200"
                         onClick={(e) => {
+                          console.log('🔵 DEBUG: Botão EDITAR clicado!');
+                          console.log('   Calendário:', calendar);
+                          console.log('   Função onEditCalendar existe:', !!onEditCalendar);
                           e.stopPropagation();
+                          console.log('   Chamando onEditCalendar...');
                           onEditCalendar(calendar);
+                          console.log('   onEditCalendar executado, fechando dropdown...');
                           closeDropdown();
                         }}
                         title="Editar calendário"
@@ -358,8 +372,13 @@ export const CalendarSelector = ({
                         size="sm"
                         className="h-6 w-6 p-0 hover:bg-gray-200"
                         onClick={(e) => {
+                          console.log('🔴 DEBUG: Botão EXCLUIR clicado!');
+                          console.log('   Calendário ID:', calendar.id);
+                          console.log('   Função onDeleteCalendar existe:', !!onDeleteCalendar);
                           e.stopPropagation();
+                          console.log('   Chamando onDeleteCalendar...');
                           onDeleteCalendar(calendar.id);
+                          console.log('   onDeleteCalendar executado, fechando dropdown...');
                           closeDropdown();
                         }}
                         title="Excluir calendário"
