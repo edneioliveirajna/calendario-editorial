@@ -116,15 +116,16 @@ const Index = () => {
 
   // Função para editar calendário
   const handleEditCalendar = (calendar: any) => {
+    console.log('🔄 DEBUG: handleEditCalendar chamado com:', calendar);
     // Abrir modal de edição
     setSelectedCalendar(calendar);
     setShowEditCalendarModal(true);
+    console.log('✅ DEBUG: Modal de edição aberto');
   };
 
   // Função para excluir calendário
   const handleDeleteCalendar = async (calendarId: number) => {
-    console.log('🗑️ DEBUG: Iniciando exclusão de calendário...');
-    console.log('   ID do calendário:', calendarId);
+    console.log('🗑️ DEBUG: handleDeleteCalendar chamado com ID:', calendarId);
     
     if (confirm('Tem certeza que deseja excluir este calendário? Todas as tarefas serão perdidas!')) {
       try {
@@ -196,8 +197,7 @@ const Index = () => {
 
   // Função para duplicar calendário
   const handleDuplicateCalendar = async (calendar: any) => {
-    console.log('📋 DEBUG: Iniciando duplicação de calendário...');
-    console.log('   Calendário original:', calendar);
+    console.log('📋 DEBUG: handleDuplicateCalendar chamado com:', calendar);
     
     try {
       console.log('🔐 DEBUG: Passo 1: Criando novo calendário...');
@@ -343,8 +343,10 @@ const Index = () => {
 
   // Esta função será passada para o CalendarSelector
   const handleShareCalendar = (calendar: any) => {
+    console.log('🔗 DEBUG: handleShareCalendar chamado com:', calendar);
     setSelectedCalendar(calendar);
-    setShowShareModal(true);
+    setShowEditCalendarModal(true);
+    console.log('✅ DEBUG: Modal de compartilhamento aberto');
   };
 
   const [displayMonth, setDisplayMonth] = useState<string>('agosto 2025'); // Inicializar com agosto 2025
