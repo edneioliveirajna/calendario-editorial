@@ -215,7 +215,6 @@ router.get('/:id', authenticateUser, async (req, res) => {
                 )
             `)
             .eq('id', id)
-            .eq('user_id', user_id)
             .single();
         
         if (error) {
@@ -251,12 +250,11 @@ router.put('/:id', authenticateUser, async (req, res) => {
         const { title, content, tags, calendar_id, task_id } = req.body;
         const user_id = req.user.id;
         
-        // Verificar se a nota existe e pertence ao usuário
+        // Verificar se a nota existe
         const { data: existing, error: checkError } = await supabase
             .from('notes')
             .select('id')
             .eq('id', id)
-            .eq('user_id', user_id)
             .single();
         
         if (checkError || !existing) {
@@ -303,7 +301,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (content !== undefined) updateData.content = content;
-        if (tags !== undefined) updateData.tags = tags;
+        // Removido tags (coluna não existe)
         if (calendar_id !== undefined) updateData.calendar_id = calendar_id;
         if (task_id !== undefined) updateData.task_id = task_id;
         
@@ -313,7 +311,6 @@ router.put('/:id', authenticateUser, async (req, res) => {
             .from('notes')
             .update(updateData)
             .eq('id', id)
-            .eq('user_id', user_id)
             .select();
         
         if (error) throw error;
