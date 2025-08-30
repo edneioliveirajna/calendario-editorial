@@ -248,10 +248,19 @@ router.get('/', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
+        // ✅ ADICIONAR PERMISSÕES para cada calendário
+        const calendarsWithPermissions = (data || []).map(calendar => ({
+            ...calendar,
+            is_owner: true,        // Usuário é dono dos próprios calendários
+            can_edit: true,        // Pode editar
+            can_delete: true,      // Pode excluir
+            can_share: true        // Pode compartilhar
+        }));
+        
         res.json({
             success: true,
             message: 'Calendários carregados com sucesso!',
-            data: data || []
+            data: calendarsWithPermissions
         });
         
     } catch (error) {
@@ -287,10 +296,19 @@ router.get('/:id', authenticateUser, async (req, res) => {
             throw error;
         }
         
+        // ✅ ADICIONAR PERMISSÕES para o calendário
+        const calendarWithPermissions = {
+            ...data,
+            is_owner: true,        // Usuário é dono do próprio calendário
+            can_edit: true,        // Pode editar
+            can_delete: true,      // Pode excluir
+            can_share: true        // Pode compartilhar
+        };
+        
         res.json({
             success: true,
             message: 'Calendário carregado com sucesso!',
-            data
+            data: calendarWithPermissions
         });
         
     } catch (error) {
