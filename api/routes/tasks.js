@@ -175,9 +175,20 @@ router.post('/', authenticateUser, async (req, res) => {
                     created_at: new Date().toISOString()
                 }
             ])
-            .select();
+            .select('*'); // Garantir que todos os campos sejam retornados, incluindo o ID
         
         if (error) throw error;
+        
+        // Verificar se o ID foi retornado
+        if (!data || !data[0] || !data[0].id) {
+            console.error('❌ TASKS ERROR: ID não retornado após inserção:', data);
+            return res.status(500).json({
+                success: false,
+                message: 'Erro interno: ID da tarefa não foi gerado'
+            });
+        }
+        
+        console.log('✅ TASKS DEBUG: Tarefa criada com sucesso, ID:', data[0].id);
         
         res.status(201).json({
             success: true,
