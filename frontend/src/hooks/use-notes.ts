@@ -65,8 +65,8 @@ export const useNotes = () => {
       const response = await apiRequest(`${getApiBaseUrl()}/notes?${queryParams.toString()}`);
       
       if (response.success) {
-        setNotes(response.notes);
-        return response.notes;
+        setNotes(response.data || []);
+        return response.data || [];
       } else {
         throw new Error(response.message || 'Erro ao buscar notas');
       }
@@ -110,7 +110,7 @@ export const useNotes = () => {
       });
       
       if (response.success) {
-        const newNote = response.note;
+        const newNote = response.data;
         setNotes(prev => [newNote, ...prev]);
         
         toast({
@@ -147,7 +147,7 @@ export const useNotes = () => {
       });
       
       if (response.success) {
-        const updatedNote = response.note;
+        const updatedNote = response.data;
         setNotes(prev => prev.map(note => 
           note.id === noteId ? updatedNote : note
         ));
