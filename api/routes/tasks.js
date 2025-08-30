@@ -189,6 +189,11 @@ router.post('/', authenticateUser, async (req, res) => {
         }
         
         console.log('✅ TASKS DEBUG: Tarefa criada com sucesso, ID:', data[0].id);
+        console.log('✅ TASKS DEBUG: Resposta completa sendo enviada:', {
+            success: true,
+            message: 'Tarefa criada com sucesso!',
+            data: data[0]
+        });
         
         res.status(201).json({
             success: true,
