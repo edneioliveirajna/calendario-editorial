@@ -68,10 +68,16 @@ export const useTasks = (calendarId: number = 1) => {
 
   // Criar nova tarefa
   const createTask = useCallback(async (taskData: Omit<CalendarTask, 'id'>) => {
+    console.log('🚀 TASKS DEBUG: Iniciando criação de tarefa...');
+    console.log('📝 TASKS DEBUG: Dados recebidos:', taskData);
+    console.log('📅 TASKS DEBUG: Calendar ID:', calendarId);
+    
     setLoading(true);
     setError(null);
     
     try {
+      console.log('📡 TASKS DEBUG: Fazendo requisição para API...');
+      
       const response = await apiRequest(API_ROUTES.TASKS.CREATE, {
         calendar_id: calendarId,
         title: taskData.title,
@@ -82,7 +88,16 @@ export const useTasks = (calendarId: number = 1) => {
         description: taskData.description || ''
       });
       
+      console.log('✅ TASKS DEBUG: Resposta da API recebida:', response);
+      console.log('🔍 TASKS DEBUG: Tipo da resposta:', typeof response);
+      console.log('🔍 TASKS DEBUG: Chaves da resposta:', Object.keys(response));
+      
       if (response.success) {
+        console.log('🎯 TASKS DEBUG: Resposta de sucesso!');
+        console.log('🔍 TASKS DEBUG: response.data:', response.data);
+        console.log('🔍 TASKS DEBUG: response.data.id:', response.data?.id);
+        console.log('🔍 TASKS DEBUG: response.data.id.toString():', response.data?.id?.toString());
+        
         const newTask: CalendarTask = {
           id: response.data.id.toString(),
           title: taskData.title,
@@ -94,6 +109,8 @@ export const useTasks = (calendarId: number = 1) => {
           notes_count: 0,
           has_notes: false
         };
+        
+        console.log('📝 TASKS DEBUG: Nova tarefa criada:', newTask);
         setTasks(prev => [...prev, newTask]);
         
         toast({
@@ -103,10 +120,11 @@ export const useTasks = (calendarId: number = 1) => {
         
         return newTask;
       } else {
+        console.log('❌ TASKS DEBUG: Resposta de erro:', response);
         throw new Error(response.error || 'Erro ao criar tarefa');
       }
     } catch (err) {
-      console.error('Erro ao criar tarefa:', err);
+      console.error('❌ TASKS DEBUG: Erro capturado:', err);
       setError('Falha ao criar tarefa');
       
       toast({
