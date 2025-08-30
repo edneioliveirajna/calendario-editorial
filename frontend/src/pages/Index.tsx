@@ -85,8 +85,8 @@ const Index = () => {
       
       // Buscar dados do novo calendário
       const calendarsResponse = await apiRequest(API_ROUTES.CALENDARS.LIST);
-      if (calendarsResponse.success && calendarsResponse.calendars) {
-        const selectedCalendar = calendarsResponse.calendars.find(c => c.id === newCalendarId);
+      if (calendarsResponse.success && calendarsResponse.data) {
+        const selectedCalendar = calendarsResponse.data.find(c => c.id === newCalendarId);
         if (selectedCalendar) {
           setCompanyName(selectedCalendar.company_name);
           setStartMonth(selectedCalendar.start_month);
@@ -151,9 +151,9 @@ const Index = () => {
             try {
               // Buscar lista de calendários disponíveis
               const calendarsResponse = await apiRequest(API_ROUTES.CALENDARS.LIST);
-              if (calendarsResponse.success && calendarsResponse.calendars && calendarsResponse.calendars.length > 0) {
+              if (calendarsResponse.success && calendarsResponse.data && calendarsResponse.data.length > 0) {
                 // Ainda há calendários - selecionar o primeiro
-                const firstCalendar = calendarsResponse.calendars[0];
+                const firstCalendar = calendarsResponse.data[0];
                 setCurrentCalendarId(firstCalendar.id);
                 localStorage.setItem('selectedCalendarId', firstCalendar.id.toString());
                 
@@ -545,15 +545,15 @@ const Index = () => {
       const response = await apiRequest(API_ROUTES.CALENDARS.LIST);
       console.log('✅ INDEX: Resposta da API para listar calendários:', response);
       
-      if (response.success && response.calendars && response.calendars.length > 0) {
+      if (response.success && response.data && response.data.length > 0) {
         console.log('🎯 INDEX: Há calendários disponíveis!');
         // Há calendários - mostrar calendário
-        setCalendars(response.calendars);
+        setCalendars(response.data);
         setHasCalendars(true);
         setShowCalendar(true); // ATIVAR FLAG DO CALENDÁRIO
         console.log('✅ INDEX: showCalendar definido como TRUE em loadFirstAvailableCalendar');
         
-        const firstCalendar = response.calendars[0];
+        const firstCalendar = response.data[0];
         console.log('📅 INDEX: Primeiro calendário selecionado:', firstCalendar);
         
         setCurrentCalendarId(firstCalendar.id);
@@ -608,18 +608,18 @@ const Index = () => {
           const response = await apiRequest(`${API_ROUTES.CALENDARS.READ}/${savedCalendarId}`);
           console.log('✅ INDEX: Resposta da API para calendário salvo:', response);
           
-          if (response.success && response.calendar) {
+          if (response.success && response.data) {
             console.log('🎯 INDEX: Calendário salvo carregado com sucesso!');
             setCurrentCalendarId(parseInt(savedCalendarId));
             setHasCalendars(true);
             setShowCalendar(true); // ATIVAR FLAG DO CALENDÁRIO
             console.log('✅ INDEX: showCalendar definido como TRUE');
-            setCompanyName(response.calendar.company_name || '');
-            setStartMonth(response.calendar.start_month || '');
-            setSelectedCalendar(response.calendar); // ✅ CRÍTICO: Definir o calendário completo
+            setCompanyName(response.data.company_name || '');
+            setStartMonth(response.data.start_month || '');
+            setSelectedCalendar(response.data); // ✅ CRÍTICO: Definir o calendário completo
             
-            if (response.calendar.start_month) {
-              const [year, month] = response.calendar.start_month.split('-');
+            if (response.data.start_month) {
+              const [year, month] = response.data.start_month.split('-');
               const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
               setCurrentDate(newDate);
             }
