@@ -52,13 +52,6 @@ export const CalendarDay = ({
   onEditTask,
   onTaskMove
 }: CalendarDayProps) => {
-  // 🔍 DEBUG: Logs para identificar se os dias estão sendo renderizados
-  console.log('🔍 CALENDARDAY DEBUG: Renderizando dia:', {
-    date: date,
-    isToday: isToday,
-    isWeekend: isWeekend,
-    tasksCount: tasks?.length || 0
-  });
   const { dragState, canDrop, startDrag, endDrag } = useDragAndDrop();
   const dateString = date ? date.toISOString().split('T')[0] : '';
   const isDropTarget = canDrop(dateString);

@@ -14,16 +14,6 @@ interface CalendarGridProps {
 }
 
 export const CalendarGrid = ({ tasks, onTaskUpdate, onTaskDelete, currentDate, loading = false, onAddTask, onEditTask, onTaskMove, highlightedTaskId }: CalendarGridProps) => {
-  // 🔍 DEBUG: Logs para identificar o problema
-  console.log('🔍 CALENDARGRID DEBUG: Componente renderizado');
-  console.log('🔍 CALENDARGRID DEBUG: Props recebidas:', {
-    tasksCount: tasks?.length || 0,
-    currentDate: currentDate,
-    loading: loading,
-    hasOnAddTask: !!onAddTask,
-    hasOnEditTask: !!onEditTask,
-    hasOnTaskMove: !!onTaskMove
-  });
   
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -85,18 +75,10 @@ export const CalendarGrid = ({ tasks, onTaskUpdate, onTaskDelete, currentDate, l
   const days = getDaysInMonth(currentDate);
   const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   
-  // 🔍 DEBUG: Logs para os dias gerados
-  console.log('🔍 CALENDARGRID DEBUG: Dias gerados:', {
-    totalDays: days.length,
-    firstDay: days[0],
-    lastDay: days[days.length - 1],
-    weekdays: weekdays
-  });
+
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      {/* 🔍 DEBUG: Log para confirmar renderização */}
-      {console.log('🔍 CALENDARGRID DEBUG: Renderizando estrutura HTML')}
       
       {/* Header with weekdays */}
       <div className="grid grid-cols-7 bg-muted">
@@ -109,8 +91,6 @@ export const CalendarGrid = ({ tasks, onTaskUpdate, onTaskDelete, currentDate, l
       
       {/* Calendar grid */}
       <div className="grid grid-cols-7 auto-rows-fr gap-0">
-        {/* 🔍 DEBUG: Log para confirmar mapeamento dos dias */}
-        {console.log('🔍 CALENDARGRID DEBUG: Mapeando', days.length, 'dias')}
         {days.map((date, index) => (
           <CalendarDay
             key={index}

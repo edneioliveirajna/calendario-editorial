@@ -753,14 +753,7 @@ const Index = () => {
           {/* APENAS CALENDÁRIO - Sem tela de estado vazio */}
           {showCalendar && (
             <>
-              {/* 🔍 DEBUG: Logs para verificar variáveis */}
-              {console.log('🔍 INDEX DEBUG: Renderizando calendário com:', {
-                showCalendar: showCalendar,
-                currentDate: currentDate,
-                currentCalendarId: currentCalendarId,
-                filteredTasksCount: filteredTasks?.length || 0,
-                tasksLoading: tasksLoading
-              })}
+
               
               <DragAndDropProvider>
                 <CalendarGrid 
