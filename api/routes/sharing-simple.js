@@ -183,4 +183,55 @@ router.get('/received', authenticateUser, async (req, res) => {
     }
 });
 
+// Ver compartilhamentos de um calendário específico
+router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
+    try {
+        const { calendarId } = req.params;
+        const user_id = req.user.id;
+        
+        // Buscar compartilhamentos do calendário (compartilhados por você)
+        const { data: sharedShares, error: sharedError } = await supabase
+            .from('shares')
+            .select(`
+                *,
+                users!shares_shared_with_fkey(name, email)
+            `)
+            .eq('item_type', 'calendar')
+            .eq('item_id', calendarId)
+            .eq('shared_by', user_id);
+        
+        if (sharedError) throw sharedError;
+        
+        // Buscar compartilhamentos recebidos do calendário
+        const { data: receivedShares, error: receivedError } = await supabase
+            .from('shares')
+            .select(`
+                *,
+                users!shares_shared_by_fkey(name, email)
+            `)
+            .eq('item_type', 'calendar')
+            .eq('item_id', calendarId)
+            .eq('shared_with', user_id);
+        
+        if (receivedError) throw receivedError;
+        
+        res.json({
+            success: true,
+            message: 'Compartilhamentos do calendário carregados com sucesso',
+            data: {
+                shared: sharedShares || [],
+                received: receivedShares || []
+            }
+        });
+        
+    } catch (error) {
+        console.error('Erro ao buscar compartilhamentos do calendário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
