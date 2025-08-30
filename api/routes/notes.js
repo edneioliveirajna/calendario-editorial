@@ -197,7 +197,12 @@ router.get('/', authenticateUser, async (req, res) => {
             ...note,
             is_calendar_owner: true, // Temporariamente hardcoded para funcionar
             can_edit: true,          // Temporariamente hardcoded para funcionar
-            can_delete: true         // Temporariamente hardcoded para funcionar
+            can_delete: true,        // Temporariamente hardcoded para funcionar
+            // Garantir que campos obrigatórios existam
+            title: note.title || 'Sem título',
+            content: note.content || '',
+            created_at: note.created_at || new Date().toISOString(),
+            updated_at: note.updated_at || note.created_at || new Date().toISOString()
         }));
         
         res.json({
@@ -255,7 +260,12 @@ router.get('/:id', authenticateUser, async (req, res) => {
             ...data,
             is_calendar_owner: true, // Temporariamente hardcoded para funcionar
             can_edit: true,          // Temporariamente hardcoded para funcionar
-            can_delete: true         // Temporariamente hardcoded para funcionar
+            can_delete: true,        // Temporariamente hardcoded para funcionar
+            // Garantir que campos obrigatórios existam
+            title: data.title || 'Sem título',
+            content: data.content || '',
+            created_at: data.created_at || new Date().toISOString(),
+            updated_at: data.updated_at || data.created_at || new Date().toISOString()
         };
         
         res.json({
@@ -274,12 +284,14 @@ router.get('/:id', authenticateUser, async (req, res) => {
     }
 });
 
-// UPDATE - Atualizar nota
-router.put('/:id', authenticateUser, async (req, res) => {
+  // UPDATE - Atualizar nota
+  router.put('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
         const { title, content, tags, calendar_id, task_id } = req.body;
         const user_id = req.user.id;
+        
+        console.log('🔄 UPDATE NOTE DEBUG:', { id, title, content, tags, calendar_id, task_id, user_id });
         
         // Verificar se a nota existe
         const { data: existing, error: checkError } = await supabase
@@ -361,6 +373,8 @@ router.put('/:id', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
+        console.log('✅ UPDATE NOTE SUCCESS:', data[0]);
+        
         res.json({
             success: true,
             message: 'Nota atualizada com sucesso!',
@@ -377,11 +391,13 @@ router.put('/:id', authenticateUser, async (req, res) => {
     }
 });
 
-// DELETE - Deletar nota
-router.delete('/:id', authenticateUser, async (req, res) => {
+  // DELETE - Deletar nota
+  router.delete('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
         const user_id = req.user.id;
+        
+        console.log('🗑️ DELETE NOTE DEBUG:', { id, user_id });
         
         // Verificar se a nota existe e pertence ao usuário
         const { data: existing, error: checkError } = await supabase
@@ -448,6 +464,8 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
+        console.log('✅ DELETE NOTE SUCCESS:', { id });
+        
         res.json({
             success: true,
             message: 'Nota deletada com sucesso!'
@@ -502,7 +520,12 @@ router.get('/search/:query', authenticateUser, async (req, res) => {
             ...note,
             is_calendar_owner: true, // Temporariamente hardcoded para funcionar
             can_edit: true,          // Temporariamente hardcoded para funcionar
-            can_delete: true         // Temporariamente hardcoded para funcionar
+            can_delete: true,        // Temporariamente hardcoded para funcionar
+            // Garantir que campos obrigatórios existam
+            title: note.title || 'Sem título',
+            content: note.content || '',
+            created_at: note.created_at || new Date().toISOString(),
+            updated_at: note.updated_at || note.created_at || new Date().toISOString()
         }));
         
         res.json({
