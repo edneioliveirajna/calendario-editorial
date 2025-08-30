@@ -75,15 +75,28 @@ export const useTasks = (calendarId: number = 1) => {
     
     try {
       console.log('📡 TASKS DEBUG: Fazendo requisição para API...');
-      
-      const response = await apiRequest(API_ROUTES.TASKS.CREATE, {
+      console.log('🌐 TASKS DEBUG: URL da requisição:', API_ROUTES.TASKS.CREATE);
+      console.log('📝 TASKS DEBUG: Dados sendo enviados:', {
         calendar_id: calendarId,
         title: taskData.title,
         content_type: taskData.contentType,
         platforms: taskData.platforms,
         status: taskData.status,
-        date: `${taskData.date.getFullYear()}-${String(taskData.date.getMonth() + 1).padStart(2, '0')}-${String(taskData.date.getDate()).padStart(2, '0')}`, // Formato YYYY-MM-DD sem conversão UTC
+        date: `${taskData.date.getFullYear()}-${String(taskData.date.getMonth() + 1).padStart(2, '0')}-${String(taskData.date.getDate()).padStart(2, '0')}`,
         description: taskData.description || ''
+      });
+      
+      const response = await apiRequest(API_ROUTES.TASKS.CREATE, {
+        method: 'POST',
+        body: JSON.stringify({
+          calendar_id: calendarId,
+          title: taskData.title,
+          content_type: taskData.contentType,
+          platforms: taskData.platforms,
+          status: taskData.status,
+          date: `${taskData.date.getFullYear()}-${String(taskData.date.getMonth() + 1).padStart(2, '0')}-${String(taskData.date.getDate()).padStart(2, '0')}`,
+          description: taskData.description || ''
+        })
       });
       
       console.log('✅ TASKS DEBUG: Resposta da API recebida:', response);
