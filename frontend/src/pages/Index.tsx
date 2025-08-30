@@ -345,7 +345,7 @@ const Index = () => {
   const handleShareCalendar = (calendar: any) => {
     console.log('🔗 DEBUG: handleShareCalendar chamado com:', calendar);
     setSelectedCalendar(calendar);
-    setShowEditCalendarModal(true);
+    setShowShareModal(true);
     console.log('✅ DEBUG: Modal de compartilhamento aberto');
   };
 
