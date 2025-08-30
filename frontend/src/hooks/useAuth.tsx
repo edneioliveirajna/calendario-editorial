@@ -35,12 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Verificar status de autenticação
   const checkAuthStatus = async () => {
     try {
-      console.log('🔍 Verificando status de autenticação...');
+      console.log('🔍 AUTH: Verificando status de autenticação...');
       const token = localStorage.getItem('authToken');
       const savedUser = localStorage.getItem('authUser');
       
-      console.log('📱 Token encontrado:', !!token);
-      console.log('👤 Usuário salvo:', !!savedUser);
+      console.log('🔑 AUTH: Token encontrado:', !!token);
+      console.log('🔑 AUTH: Token valor:', token ? token.substring(0, 50) + '...' : 'null');
+      console.log('👤 AUTH: Usuário salvo:', !!savedUser);
+      console.log('👤 AUTH: Usuário valor:', savedUser);
       
       if (token && savedUser) {
         // Tentar restaurar usuário do localStorage primeiro

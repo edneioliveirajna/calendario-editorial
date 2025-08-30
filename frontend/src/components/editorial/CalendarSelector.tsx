@@ -58,12 +58,18 @@ export const CalendarSelector = ({
 
   // Carregar calendários do usuário
   const loadCalendars = async () => {
+    console.log('🚀 CALENDAR SELECTOR: Iniciando carregamento de calendários...');
+    console.log('🔑 CALENDAR SELECTOR: Token atual:', localStorage.getItem('authToken'));
+    console.log('👤 CALENDAR SELECTOR: Usuário atual:', localStorage.getItem('authUser'));
+    console.log('🌐 CALENDAR SELECTOR: URL da API:', API_ROUTES.CALENDARS.LIST);
+    
     setLoading(true);
     try {
+      console.log('📡 CALENDAR SELECTOR: Fazendo requisição para API...');
       const response = await apiRequest(API_ROUTES.CALENDARS.LIST);
-      console.log('🔍 DEBUG: Resposta da API:', response);
-      console.log('🔍 DEBUG: Tipo da resposta:', typeof response);
-      console.log('🔍 DEBUG: Chaves da resposta:', Object.keys(response));
+      console.log('✅ CALENDAR SELECTOR: Resposta da API recebida:', response);
+      console.log('🔍 CALENDAR SELECTOR: Tipo da resposta:', typeof response);
+      console.log('🔍 CALENDAR SELECTOR: Chaves da resposta:', Object.keys(response));
       
       if (response.success) {
         // Verificar se há calendários na resposta

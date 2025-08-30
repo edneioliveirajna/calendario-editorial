@@ -86,26 +86,43 @@ export const buildApiUrl = (route) => {
 
 // Função para fazer requisições com tratamento de erro
 export const apiRequest = async (url, options = {}) => {
+  console.log('🚀 API REQUEST: Iniciando requisição para:', url);
+  console.log('🔑 API REQUEST: Token disponível:', !!getAuthToken());
+  console.log('🔑 API REQUEST: Headers de auth:', getAuthHeaders());
+  console.log('🌐 API REQUEST: URL base:', config.baseURL);
+  
   try {
     // Construir URL completa se for relativa
     const fullUrl = url.startsWith('http') ? url : `${config.baseURL}${url}`;
+    console.log('🌐 API REQUEST: URL completa:', fullUrl);
+    
+    const requestHeaders = {
+      ...apiConfig.headers,
+      ...getAuthHeaders(),
+      ...options.headers
+    };
+    console.log('📋 API REQUEST: Headers finais:', requestHeaders);
     
     const response = await fetch(fullUrl, {
       ...options,
-      headers: {
-        ...apiConfig.headers,
-        ...getAuthHeaders(),
-        ...options.headers
-      }
+      headers: requestHeaders
     });
 
+    console.log('📡 API REQUEST: Resposta recebida, status:', response.status);
+    console.log('📡 API REQUEST: Headers da resposta:', Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
+      console.error('❌ API REQUEST: Erro HTTP:', response.status, response.statusText);
+      const errorText = await response.text();
+      console.error('❌ API REQUEST: Corpo do erro:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('✅ API REQUEST: Dados da resposta:', responseData);
+    return responseData;
   } catch (error) {
-    console.error('API Request Error:', error);
+    console.error('❌ API REQUEST: Erro capturado:', error);
     throw error;
   }
 };
