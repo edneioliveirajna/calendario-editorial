@@ -559,4 +559,100 @@ router.put('/:id/complete', authenticateUser, async (req, res) => {
     }
 });
 
+// UPDATE - Mover tarefa (drag & drop)
+router.put('/:id/move', authenticateUser, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { new_date, new_calendar_id } = req.body;
+        const user_id = req.user.id;
+        
+        console.log('🔄 TASKS MOVE DEBUG: Movendo tarefa:', { id, new_date, new_calendar_id });
+        
+        // Verificar se a tarefa existe pelo ID e se o calendário pertence ao usuário
+        const { data: existing, error: checkError } = await supabase
+            .from('tasks')
+            .select('id, calendar_id, title')
+            .eq('id', id)
+            .single();
+        
+        if (checkError || !existing) {
+            return res.status(404).json({
+                success: false,
+                message: 'Tarefa não encontrada'
+            });
+        }
+        
+        // Verificar se o calendário da tarefa pertence ao usuário
+        const { data: calendar, error: calendarError } = await supabase
+            .from('calendars')
+            .select('id')
+            .eq('id', existing.calendar_id)
+            .eq('user_id', user_id)
+            .single();
+        
+        if (calendarError || !calendar) {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado a esta tarefa'
+            });
+        }
+        
+        // Preparar dados para atualização
+        const updateData = {
+            updated_at: new Date().toISOString()
+        };
+        
+        // Atualizar data se fornecida
+        if (new_date) {
+            updateData.date = new_date;
+        }
+        
+        // Atualizar calendário se fornecido
+        if (new_calendar_id) {
+            // Verificar se o novo calendário também pertence ao usuário
+            const { data: newCalendar, error: newCalendarError } = await supabase
+                .from('calendars')
+                .select('id')
+                .eq('id', new_calendar_id)
+                .eq('user_id', user_id)
+                .single();
+            
+            if (newCalendarError || !newCalendar) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Novo calendário não encontrado ou acesso negado'
+                });
+            }
+            
+            updateData.calendar_id = new_calendar_id;
+        }
+        
+        console.log('🔄 TASKS MOVE DEBUG: Dados para atualização:', updateData);
+        
+        const { data, error } = await supabase
+            .from('tasks')
+            .update(updateData)
+            .eq('id', id)
+            .select('*');
+        
+        if (error) throw error;
+        
+        console.log('✅ TASKS MOVE DEBUG: Tarefa movida com sucesso:', data[0]);
+        
+        res.json({
+            success: true,
+            message: 'Tarefa movida com sucesso!',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao mover tarefa:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao mover tarefa',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;
