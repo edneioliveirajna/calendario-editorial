@@ -265,12 +265,19 @@ export const useTasks = (calendarId: number = 1) => {
     setError(null);
     
     try {
+      console.log('🔄 TASKS MOVE DEBUG: Iniciando movimentação da tarefa:', taskId, 'para data:', newDate);
+      
       const formattedDate = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')}`;
       
-        const response = await apiRequest(`${API_ROUTES.TASKS.UPDATE(taskId)}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ new_date: formattedDate })
-        });
+      console.log('🔄 TASKS MOVE DEBUG: Data formatada:', formattedDate);
+      console.log('🔄 TASKS MOVE DEBUG: URL da requisição:', `/tasks/${taskId}/move`);
+      
+      const response = await apiRequest(`/tasks/${taskId}/move`, {
+        method: 'PUT',
+        body: JSON.stringify({ new_date: formattedDate })
+      });
+      
+      console.log('✅ TASKS MOVE DEBUG: Resposta da API:', response);
       
       if (response.success) {
         // Atualizar a tarefa no estado local
@@ -294,7 +301,7 @@ export const useTasks = (calendarId: number = 1) => {
         throw new Error(response.error || 'Erro ao mover tarefa');
       }
     } catch (err) {
-      console.error('Erro ao mover tarefa:', err);
+      console.error('❌ TASKS MOVE DEBUG: Erro ao mover tarefa:', err);
       setError('Falha ao mover tarefa');
       
       toast({
