@@ -247,37 +247,28 @@ router.get('/', authenticateUser, async (req, res) => {
                 let canDelete = false;
                 let canShare = false;
                 
-                // Verificar se é nota própria
-                if (note.user_id === user_id) {
+                // Verificar se é calendário próprio
+                if (note.calendar_id && note.calendars && note.calendars.user_id === user_id) {
                     hasAccess = true;
                     isOwner = true;
                     canEdit = true;
                     canDelete = true;
                     canShare = true;
                 } else if (note.calendar_id) {
-                    // Verificar se é calendário próprio
-                    if (note.calendars && note.calendars.user_id === user_id) {
+                    // Verificar se é calendário compartilhado
+                    const { data: sharedCalendar, error: sharedError } = await supabase
+                        .from('calendar_shares')
+                        .select('can_edit, can_delete, can_share')
+                        .eq('calendar_id', note.calendar_id)
+                        .eq('shared_with_id', user_id)
+                        .single();
+                    
+                    if (!sharedError && sharedCalendar) {
                         hasAccess = true;
-                        isOwner = true;
-                        canEdit = true;
-                        canDelete = true;
-                        canShare = true;
-                    } else {
-                        // Verificar se é calendário compartilhado
-                        const { data: sharedCalendar, error: sharedError } = await supabase
-                            .from('calendar_shares')
-                            .select('can_edit, can_delete, can_share')
-                            .eq('calendar_id', note.calendar_id)
-                            .eq('shared_with_id', user_id)
-                            .single();
-                        
-                        if (!sharedError && sharedCalendar) {
-                            hasAccess = true;
-                            isOwner = false;
-                            canEdit = sharedCalendar.can_edit;
-                            canDelete = sharedCalendar.can_delete;
-                            canShare = sharedCalendar.can_share;
-                        }
+                        isOwner = false;
+                        canEdit = sharedCalendar.can_edit;
+                        canDelete = sharedCalendar.can_delete;
+                        canShare = sharedCalendar.can_share;
                     }
                 }
                 

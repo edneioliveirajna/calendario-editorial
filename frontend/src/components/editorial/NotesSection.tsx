@@ -333,17 +333,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
                     )}
                     
                     {/* Botão Excluir - só mostra se pode excluir */}
-                    {(() => {
-                      const canDelete = note.is_calendar_owner || note.can_delete;
-                      console.log('🔍 DELETE NOTE DEBUG:', {
-                        noteId: note.id,
-                        noteTitle: note.title,
-                        is_calendar_owner: note.is_calendar_owner,
-                        can_delete: note.can_delete,
-                        finalCanDelete: canDelete
-                      });
-                      return canDelete;
-                    })() && (
+                    {(note.is_calendar_owner || note.can_delete) && (
                       <Button
                         onClick={() => handleDeleteNote(note.id)}
                         variant="outline"

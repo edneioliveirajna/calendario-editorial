@@ -355,17 +355,7 @@ export const TasksDropdown = ({ tasks, onEditTask, onDeleteTask, onTaskMove, cur
                   )}
                   
                   {/* Botão Excluir - só mostra se pode excluir */}
-                  {(() => {
-                    const canDelete = task.isCalendarOwner || task.calendarPermissions?.can_delete;
-                    console.log('🔍 DELETE BUTTON DEBUG:', {
-                      taskId: task.id,
-                      taskTitle: task.title,
-                      isCalendarOwner: task.isCalendarOwner,
-                      can_delete: task.calendarPermissions?.can_delete,
-                      finalCanDelete: canDelete
-                    });
-                    return canDelete;
-                  })() && (
+                  {(task.isCalendarOwner || task.calendarPermissions?.can_delete) && (
                     <Button
                       variant="ghost"
                       size="sm"
