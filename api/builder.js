@@ -30,7 +30,7 @@ const authRoutes = require('./auth-new');
 const calendarRoutes = require('./routes/calendars');
 const taskRoutes = require('./routes/tasks');
 const noteRoutes = require('./routes/notes');
-const sharingRoutes = require('./routes/sharing-simple');
+const sharingRoutes = require('./routes/sharing');
 
 // Rota de teste
 app.get('/', (req, res) => {
