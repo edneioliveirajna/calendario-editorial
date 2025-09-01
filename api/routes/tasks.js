@@ -129,7 +129,7 @@ const authenticateUser = async (req, res, next) => {
 // CREATE - Criar nova tarefa
 router.post('/', authenticateUser, async (req, res) => {
     try {
-        const { title, description, content_type, platforms, status, calendar_id, scheduled_date } = req.body;
+        const { title, description, content_type, platforms, status, calendar_id, scheduled_date, date } = req.body;
         const user_id = req.user.id;
         
         if (!title) {
@@ -193,7 +193,7 @@ router.post('/', authenticateUser, async (req, res) => {
                     platforms: platforms || [],
                     status: status || 'pending',
                     calendar_id,
-                    scheduled_date: scheduled_date || null,
+                    scheduled_date: date || scheduled_date || null,
                     created_at: new Date().toISOString()
                 }
             ])

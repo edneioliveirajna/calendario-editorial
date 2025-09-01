@@ -554,15 +554,28 @@ router.get('/:id', authenticateUser, async (req, res) => {
         let hasAccess = false;
         
         if (existing.calendar_id) {
-            const { data: calendar, error: calendarError } = await supabase
+            // 1. Verificar se é calendário próprio
+            const { data: ownCalendar, error: ownError } = await supabase
                 .from('calendars')
                 .select('id')
                 .eq('id', existing.calendar_id)
                 .eq('user_id', user_id)
                 .single();
             
-            if (calendar && !calendarError) {
-                hasAccess = true;
+            if (!ownError && ownCalendar) {
+                hasAccess = true; // Dono pode sempre excluir
+            } else {
+                // 2. Verificar se é calendário compartilhado com permissão de excluir
+                const { data: sharedCalendar, error: sharedError } = await supabase
+                    .from('calendar_shares')
+                    .select('can_delete')
+                    .eq('calendar_id', existing.calendar_id)
+                    .eq('shared_with_id', user_id)
+                    .single();
+                
+                if (!sharedError && sharedCalendar && sharedCalendar.can_delete) {
+                    hasAccess = true;
+                }
             }
         }
         
@@ -574,15 +587,28 @@ router.get('/:id', authenticateUser, async (req, res) => {
                 .single();
             
             if (task && !taskError) {
-                const { data: calendar, error: calendarError } = await supabase
+                // 1. Verificar se é calendário próprio
+                const { data: ownCalendar, error: ownError } = await supabase
                     .from('calendars')
                     .select('id')
                     .eq('id', task.calendar_id)
                     .eq('user_id', user_id)
                     .single();
                 
-                if (calendar && !calendarError) {
-                    hasAccess = true;
+                if (!ownError && ownCalendar) {
+                    hasAccess = true; // Dono pode sempre excluir
+                } else {
+                    // 2. Verificar se é calendário compartilhado com permissão de excluir
+                    const { data: sharedCalendar, error: sharedError } = await supabase
+                        .from('calendar_shares')
+                        .select('can_delete')
+                        .eq('calendar_id', task.calendar_id)
+                        .eq('shared_with_id', user_id)
+                        .single();
+                    
+                    if (!sharedError && sharedCalendar && sharedCalendar.can_delete) {
+                        hasAccess = true;
+                    }
                 }
             }
         }
