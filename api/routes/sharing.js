@@ -219,10 +219,7 @@ router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
         // Buscar compartilhamentos do calendário (compartilhados por você)
         const { data: shares, error } = await supabase
             .from('calendar_shares')
-            .select(`
-                *,
-                users!calendar_shares_shared_with_id_fkey(id, name, email)
-            `)
+            .select('*')
             .eq('calendar_id', calendarId)
             .eq('owner_id', user_id)
             .order('shared_at', { ascending: false });
@@ -232,12 +229,29 @@ router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
             throw error;
         }
         
-        console.log('✅ Compartilhamentos encontrados:', shares?.length || 0);
+        // Buscar informações dos usuários compartilhados
+        const sharesWithUsers = await Promise.all(
+            (shares || []).map(async (share) => {
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select('id, name, email')
+                    .eq('id', share.shared_with_id)
+                    .single();
+                
+                return {
+                    ...share,
+                    user_name: user?.name || 'Usuário não encontrado',
+                    user_email: user?.email || 'Email não encontrado'
+                };
+            })
+        );
+        
+        console.log('✅ Compartilhamentos encontrados:', sharesWithUsers?.length || 0);
         
         res.json({
             success: true,
             message: 'Compartilhamentos do calendário carregados com sucesso!',
-            shares: shares || []
+            shares: sharesWithUsers || []
         });
         
     } catch (error) {

@@ -240,27 +240,59 @@ router.get('/', authenticateUser, async (req, res) => {
     try {
         const user_id = req.user.id;
         
-        const { data, error } = await supabase
+        // Buscar calendários próprios do usuário
+        const { data: ownCalendars, error: ownError } = await supabase
             .from('calendars')
             .select('*')
             .eq('user_id', user_id)
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (ownError) throw ownError;
         
-        // ✅ ADICIONAR PERMISSÕES para cada calendário
-        const calendarsWithPermissions = (data || []).map(calendar => ({
+        // Buscar calendários compartilhados com o usuário
+        const { data: sharedCalendars, error: sharedError } = await supabase
+            .from('calendar_shares')
+            .select(`
+                *,
+                calendars!calendar_shares_calendar_id_fkey(*),
+                users!calendar_shares_owner_id_fkey(id, name, email)
+            `)
+            .eq('shared_with_id', user_id)
+            .order('shared_at', { ascending: false });
+        
+        if (sharedError) throw sharedError;
+        
+        // Processar calendários próprios
+        const ownCalendarsWithPermissions = (ownCalendars || []).map(calendar => ({
             ...calendar,
-            is_owner: true,        // Usuário é dono dos próprios calendários
-            can_edit: true,        // Pode editar
-            can_delete: true,      // Pode excluir
-            can_share: true        // Pode compartilhar
+            is_owner: true,
+            can_edit: true,
+            can_delete: true,
+            can_share: true
         }));
+        
+        // Processar calendários compartilhados
+        const sharedCalendarsWithPermissions = (sharedCalendars || []).map(share => ({
+            ...share.calendars,
+            is_owner: false,
+            can_edit: share.can_edit,
+            can_delete: share.can_delete,
+            can_share: share.can_share,
+            shared_at: share.shared_at,
+            owner_name: share.users?.name || 'Usuário não encontrado',
+            owner_email: share.users?.email || 'Email não encontrado'
+        }));
+        
+        // Combinar todos os calendários
+        const allCalendars = [...ownCalendarsWithPermissions, ...sharedCalendarsWithPermissions];
         
         res.json({
             success: true,
             message: 'Calendários carregados com sucesso!',
-            data: calendarsWithPermissions
+            data: allCalendars,
+            total: allCalendars.length,
+            own: ownCalendarsWithPermissions.length,
+            shared: sharedCalendarsWithPermissions.length
         });
         
     } catch (error) {
