@@ -68,11 +68,21 @@ export const CreateTaskModal = ({ open, onClose, onTaskCreated, selectedDate, ca
         });
       } catch (error) {
         console.error('❌ MODAL DEBUG: Erro capturado:', error);
-        toast({
-          title: "❌ Erro!",
-          description: "Falha ao criar tarefa. Tente novamente.",
-          variant: "destructive",
-        });
+        
+        // Verificar se é erro de permissão
+        if (error.isPermissionError) {
+          toast({
+            title: "🚫 Acesso Negado",
+            description: error.permissionMessage || "Você não tem permissão para realizar essa ação. Verifique com o administrador do calendário.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "❌ Erro!",
+            description: "Falha ao criar tarefa. Tente novamente.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setIsLoading(false);
       }

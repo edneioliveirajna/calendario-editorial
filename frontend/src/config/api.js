@@ -115,6 +115,16 @@ export const apiRequest = async (url, options = {}) => {
       console.error('❌ API REQUEST: Erro HTTP:', response.status, response.statusText);
       const errorText = await response.text();
       console.error('❌ API REQUEST: Corpo do erro:', errorText);
+      
+      // Detectar erros de permissão (403)
+      if (response.status === 403) {
+        const errorData = JSON.parse(errorText);
+        const error = new Error(`HTTP error! status: ${response.status}`);
+        error.isPermissionError = true;
+        error.permissionMessage = errorData.message || 'Você não tem permissão para realizar essa ação. Verifique com o administrador do calendário.';
+        throw error;
+      }
+      
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 

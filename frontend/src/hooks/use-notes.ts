@@ -125,10 +125,21 @@ export const useNotes = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      toast({
-        title: "❌ Erro",
-        description: `Não foi possível criar a nota: ${errorMessage}`,
-      });
+      
+      // Verificar se é erro de permissão
+      if (err.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: err.permissionMessage || "Você não tem permissão para realizar essa ação. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: `Não foi possível criar a nota: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
       return null;
     } finally {
       setLoading(false);
@@ -164,10 +175,21 @@ export const useNotes = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      toast({
-        title: "❌ Erro",
-        description: `Não foi possível atualizar a nota: ${errorMessage}`,
-      });
+      
+      // Verificar se é erro de permissão
+      if (err.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: err.permissionMessage || "Você não tem permissão para realizar essa ação. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: `Não foi possível atualizar a nota: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
       return null;
     } finally {
       setLoading(false);
@@ -199,10 +221,21 @@ export const useNotes = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      toast({
-        title: "❌ Erro",
-        description: `Não foi possível excluir a nota: ${errorMessage}`,
-      });
+      
+      // Verificar se é erro de permissão
+      if (err.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: err.permissionMessage || "Você não tem permissão para realizar essa ação. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro",
+          description: `Não foi possível excluir a nota: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
       return false;
     } finally {
       setLoading(false);
