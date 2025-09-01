@@ -22,12 +22,12 @@ BEGIN
         
         -- Criar trigger para atualizar automaticamente
         CREATE OR REPLACE FUNCTION update_updated_at_column()
-        RETURNS TRIGGER AS $$
+        RETURNS TRIGGER AS $func$
         BEGIN
             NEW.updated_at = NOW();
             RETURN NEW;
         END;
-        $$ language 'plpgsql';
+        $func$ LANGUAGE plpgsql;
 
         -- Aplicar trigger na tabela
         DROP TRIGGER IF EXISTS update_calendar_shares_updated_at ON calendar_shares;
