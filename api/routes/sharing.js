@@ -344,7 +344,8 @@ router.put('/:shareId', authenticateUser, async (req, res) => {
             .update({
                 can_edit: permissions?.can_edit !== false,
                 can_delete: permissions?.can_delete !== false,
-                can_share: permissions?.can_share || false
+                can_share: permissions?.can_share || false,
+                updated_at: new Date().toISOString()
             })
             .eq('id', shareId)
             .select();
