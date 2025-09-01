@@ -312,4 +312,60 @@ router.delete('/:shareId', authenticateUser, async (req, res) => {
     }
 });
 
+// ========================================
+// ATUALIZAR PERMISSÕES DE COMPARTILHAMENTO
+// ========================================
+router.put('/:shareId', authenticateUser, async (req, res) => {
+    try {
+        const { shareId } = req.params;
+        const { permissions } = req.body;
+        const user_id = req.user.id;
+        
+        console.log('✏️ Atualizando permissões do compartilhamento:', shareId, 'usuário:', user_id);
+        
+        // Verificar se o compartilhamento existe e foi criado pelo usuário
+        const { data: share, error: checkError } = await supabase
+            .from('calendar_shares')
+            .select('*')
+            .eq('id', shareId)
+            .eq('owner_id', user_id)
+            .single();
+        
+        if (checkError || !share) {
+            return res.status(404).json({
+                success: false,
+                message: 'Compartilhamento não encontrado ou você não tem permissão para editá-lo'
+            });
+        }
+        
+        // Atualizar permissões
+        const { data, error } = await supabase
+            .from('calendar_shares')
+            .update({
+                can_edit: permissions?.can_edit !== false,
+                can_delete: permissions?.can_delete !== false,
+                can_share: permissions?.can_share || false,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', shareId)
+            .select();
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Permissões atualizadas com sucesso!',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao atualizar permissões:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao atualizar permissões',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

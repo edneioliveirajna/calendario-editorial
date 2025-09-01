@@ -251,20 +251,47 @@ router.get('/', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
-        // Filtrar tarefas por calendários que pertencem ao usuário
+        // Filtrar tarefas por calendários que pertencem ao usuário OU são compartilhados
         let filteredTasks = [];
         if (data && data.length > 0) {
             for (const task of data) {
                 if (task.calendar_id) {
-                    const { data: calendar, error: calendarError } = await supabase
+                    // Verificar se é calendário próprio
+                    const { data: ownCalendar, error: ownError } = await supabase
                         .from('calendars')
                         .select('id')
                         .eq('id', task.calendar_id)
                         .eq('user_id', user_id)
                         .single();
                     
-                    if (!calendarError && calendar) {
-                        filteredTasks.push(task);
+                    if (!ownError && ownCalendar) {
+                        // É calendário próprio
+                        filteredTasks.push({
+                            ...task,
+                            is_calendar_owner: true,
+                            can_edit: true,
+                            can_delete: true,
+                            can_share: true
+                        });
+                    } else {
+                        // Verificar se é calendário compartilhado
+                        const { data: sharedCalendar, error: sharedError } = await supabase
+                            .from('calendar_shares')
+                            .select('can_edit, can_delete, can_share')
+                            .eq('calendar_id', task.calendar_id)
+                            .eq('shared_with_id', user_id)
+                            .single();
+                        
+                        if (!sharedError && sharedCalendar) {
+                            // É calendário compartilhado
+                            filteredTasks.push({
+                                ...task,
+                                is_calendar_owner: false,
+                                can_edit: sharedCalendar.can_edit,
+                                can_delete: sharedCalendar.can_delete,
+                                can_share: sharedCalendar.can_share
+                            });
+                        }
                     }
                 }
             }

@@ -163,6 +163,7 @@ router.get('/', authenticateUser, async (req, res) => {
         const user_id = req.user.id;
         const { calendar_id, task_id, tags } = req.query;
         
+        // Buscar notas do usuário E notas de calendários compartilhados
         let query = supabase
             .from('notes')
             .select(`
@@ -170,15 +171,15 @@ router.get('/', authenticateUser, async (req, res) => {
                 calendars (
                     id,
                     name,
-                    color
+                    color,
+                    user_id
                 ),
                 tasks (
                     id,
                     title,
                     status
                 )
-            `)
-            .eq('user_id', user_id);
+            `);
         
         // Filtros opcionais
         if (calendar_id) query = query.eq('calendar_id', calendar_id);
@@ -192,23 +193,71 @@ router.get('/', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
-        // Adicionar permissões para cada nota
-        const notesWithPermissions = (data || []).map(note => ({
-            ...note,
-            is_calendar_owner: true, // Temporariamente hardcoded para funcionar
-            can_edit: true,          // Temporariamente hardcoded para funcionar
-            can_delete: true,        // Temporariamente hardcoded para funcionar
-            // Garantir que campos obrigatórios existam
-            title: note.title || 'Sem título',
-            content: note.content || '',
-            created_at: note.created_at || new Date().toISOString(),
-            updated_at: note.updated_at || note.created_at || new Date().toISOString()
-        }));
+        // Filtrar notas por permissões (próprias ou de calendários compartilhados)
+        let filteredNotes = [];
+        if (data && data.length > 0) {
+            for (const note of data) {
+                let hasAccess = false;
+                let isOwner = false;
+                let canEdit = false;
+                let canDelete = false;
+                let canShare = false;
+                
+                // Verificar se é nota própria
+                if (note.user_id === user_id) {
+                    hasAccess = true;
+                    isOwner = true;
+                    canEdit = true;
+                    canDelete = true;
+                    canShare = true;
+                } else if (note.calendar_id) {
+                    // Verificar se é calendário próprio
+                    if (note.calendars && note.calendars.user_id === user_id) {
+                        hasAccess = true;
+                        isOwner = true;
+                        canEdit = true;
+                        canDelete = true;
+                        canShare = true;
+                    } else {
+                        // Verificar se é calendário compartilhado
+                        const { data: sharedCalendar, error: sharedError } = await supabase
+                            .from('calendar_shares')
+                            .select('can_edit, can_delete, can_share')
+                            .eq('calendar_id', note.calendar_id)
+                            .eq('shared_with_id', user_id)
+                            .single();
+                        
+                        if (!sharedError && sharedCalendar) {
+                            hasAccess = true;
+                            isOwner = false;
+                            canEdit = sharedCalendar.can_edit;
+                            canDelete = sharedCalendar.can_delete;
+                            canShare = sharedCalendar.can_share;
+                        }
+                    }
+                }
+                
+                if (hasAccess) {
+                    filteredNotes.push({
+                        ...note,
+                        is_calendar_owner: isOwner,
+                        can_edit: canEdit,
+                        can_delete: canDelete,
+                        can_share: canShare,
+                        // Garantir que campos obrigatórios existam
+                        title: note.title || 'Sem título',
+                        content: note.content || '',
+                        created_at: note.created_at || new Date().toISOString(),
+                        updated_at: note.updated_at || note.created_at || new Date().toISOString()
+                    });
+                }
+            }
+        }
         
         res.json({
             success: true,
             message: 'Notas carregadas com sucesso!',
-            data: notesWithPermissions
+            data: filteredNotes
         });
         
     } catch (error) {
