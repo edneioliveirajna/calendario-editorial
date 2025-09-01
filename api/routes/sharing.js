@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { supabase } = require('../config/supabase-client');
 
-// Middleware de autenticação corrigido
+// Middleware de autenticação
 const authenticateUser = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.replace('Bearer ', '');
@@ -14,10 +14,8 @@ const authenticateUser = async (req, res, next) => {
             });
         }
         
-        // Verificar token JWT localmente
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
         
-        // Verificar se o usuário existe no banco
         const { data: user, error } = await supabase
             .from('users')
             .select('id, email')
@@ -55,436 +53,9 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
-// CREATE - Compartilhar item (calendário, tarefa ou nota)
-router.post('/share', authenticateUser, async (req, res) => {
-    try {
-        const { item_type, item_id, shared_with_email, permissions } = req.body;
-        const user_id = req.user.id;
-        
-        if (!item_type || !item_id || !shared_with_email) {
-            return res.status(400).json({
-                success: false,
-                message: 'Tipo do item, ID e email são obrigatórios'
-            });
-        }
-        
-        // Verificar se o item existe e pertence ao usuário
-        let itemExists = false;
-        let itemData = null;
-        
-        switch (item_type) {
-            case 'calendar':
-                const { data: calendar, error: calendarError } = await supabase
-                    .from('calendars')
-                    .select('*')
-                    .eq('id', item_id)
-                    .eq('user_id', user_id)
-                    .single();
-                
-                if (!calendarError && calendar) {
-                    itemExists = true;
-                    itemData = calendar;
-                }
-                break;
-                
-            case 'task':
-                const { data: task, error: taskError } = await supabase
-                    .from('tasks')
-                    .select('*')
-                    .eq('id', item_id)
-                    .eq('user_id', user_id)
-                    .single();
-                
-                if (!taskError && task) {
-                    itemExists = true;
-                    itemData = task;
-                }
-                break;
-                
-            case 'note':
-                const { data: note, error: noteError } = await supabase
-                    .from('notes')
-                    .select('*')
-                    .eq('id', item_id)
-                    .eq('user_id', user_id)
-                    .single();
-                
-                if (!noteError && note) {
-                    itemExists = true;
-                    itemData = note;
-                }
-                break;
-                
-            default:
-                return res.status(400).json({
-                    success: false,
-                    message: 'Tipo de item inválido. Use: calendar, task ou note'
-                });
-        }
-        
-        if (!itemExists) {
-            return res.status(404).json({
-                success: false,
-                message: 'Item não encontrado ou não pertence ao usuário'
-            });
-        }
-        
-        // Buscar usuário com quem compartilhar pelo email
-        const { data: targetUser, error: userError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', shared_with_email)
-            .single();
-        
-        if (userError || !targetUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Usuário não encontrado'
-            });
-        }
-        
-        // Verificar se já existe um compartilhamento
-        const { data: existingShare, error: shareCheckError } = await supabase
-            .from('shares')
-            .select('*')
-            .eq('item_type', item_type)
-            .eq('item_id', item_id)
-            .eq('shared_with', targetUser.id)
-            .eq('status', 'pending')
-            .single();
-        
-        if (existingShare && !shareCheckError) {
-            return res.status(400).json({
-                success: false,
-                message: 'Item já foi compartilhado com este usuário'
-            });
-        }
-        
-        // Criar compartilhamento
-        const { data, error } = await supabase
-            .from('shares')
-            .insert([
-                {
-                    item_type,
-                    item_id,
-                    shared_by: user_id,
-                    shared_with: targetUser.id,
-                    permissions: permissions || 'read',
-                    status: 'pending',
-                    created_at: new Date().toISOString()
-                }
-            ])
-            .select();
-        
-        if (error) throw error;
-        
-        res.status(201).json({
-            success: true,
-            message: 'Item compartilhado com sucesso!',
-            data: data[0]
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao compartilhar item:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao compartilhar item',
-            error: error.message
-        });
-    }
-});
-
-// READ - Listar itens compartilhados pelo usuário
-router.get('/shared', authenticateUser, async (req, res) => {
-    try {
-        const user_id = req.user.id;
-        
-        const { data, error } = await supabase
-            .from('shares')
-            .select(`
-                *,
-                calendars (
-                    id,
-                    name,
-                    color
-                ),
-                tasks (
-                    id,
-                    title,
-                    status
-                ),
-                notes (
-                    id,
-                    title
-                )
-            `)
-            .eq('shared_by', user_id)
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        res.json({
-            success: true,
-            message: 'Itens compartilhados carregados com sucesso!',
-            data: data || []
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao listar itens compartilhados:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao listar itens compartilhados',
-            error: error.message
-        });
-    }
-});
-
-// READ - Listar itens recebidos pelo usuário
-router.get('/received', authenticateUser, async (req, res) => {
-    try {
-        const user_id = req.user.id;
-        
-        const { data, error } = await supabase
-            .from('shares')
-            .select(`
-                *,
-                calendars (
-                    id,
-                    name,
-                    color
-                ),
-                tasks (
-                    id,
-                    title,
-                    status
-                ),
-                notes (
-                    id,
-                    title
-                )
-            `)
-            .eq('shared_with', user_id)
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        res.json({
-            success: true,
-            message: 'Itens recebidos carregados com sucesso!',
-            data: data || []
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao listar itens recebidos:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao listar itens recebidos',
-            error: error.message
-        });
-    }
-});
-
-// UPDATE - Aceitar compartilhamento
-router.put('/:id/accept', authenticateUser, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
-        
-        // Verificar se o compartilhamento existe e é para o usuário
-        const { data: sharing, error: checkError } = await supabase
-            .from('shares')
-            .select('*')
-            .eq('id', id)
-            .eq('shared_with', user_id)
-            .eq('status', 'pending')
-            .single();
-        
-        if (checkError || !sharing) {
-            return res.status(404).json({
-                success: false,
-                message: 'Compartilhamento não encontrado ou já processado'
-            });
-        }
-        
-        // Atualizar status para aceito
-        const { data, error } = await supabase
-            .from('shares')
-            .update({
-                status: 'accepted',
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id)
-            .select();
-        
-        if (error) throw error;
-        
-        res.json({
-            success: true,
-            message: 'Compartilhamento aceito com sucesso!',
-            data: data[0]
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao aceitar compartilhamento:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao aceitar compartilhamento',
-            error: error.message
-        });
-    }
-});
-
-// UPDATE - Recusar compartilhamento
-router.put('/:id/decline', authenticateUser, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
-        
-        // Verificar se o compartilhamento existe e é para o usuário
-        const { data: sharing, error: checkError } = await supabase
-            .from('shares')
-            .select('*')
-            .eq('id', id)
-            .eq('shared_with', user_id)
-            .eq('status', 'pending')
-            .single();
-        
-        if (checkError || !sharing) {
-            return res.status(404).json({
-                success: false,
-                message: 'Compartilhamento não encontrado ou já processado'
-            });
-        }
-        
-        // Atualizar status para recusado
-        const { data, error } = await supabase
-            .from('shares')
-            .update({
-                status: 'declined',
-                updated_at: new Date().toISOString()
-            })
-            .eq('id', id)
-            .select();
-        
-        if (error) throw error;
-        
-        res.json({
-            success: true,
-            message: 'Compartilhamento recusado com sucesso!',
-            data: data[0]
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao recusar compartilhamento:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao recusar compartilhamento',
-            error: error.message
-        });
-    }
-});
-
-// DELETE - Cancelar compartilhamento
-router.delete('/:id', authenticateUser, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
-        
-        // Verificar se o compartilhamento existe e foi criado pelo usuário
-        const { data: sharing, error: checkError } = await supabase
-            .from('shares')
-            .select('*')
-            .eq('id', id)
-            .eq('shared_by', user_id)
-            .single();
-        
-        if (checkError || !sharing) {
-            return res.status(404).json({
-                success: false,
-                message: 'Compartilhamento não encontrado'
-            });
-        }
-        
-        // Deletar compartilhamento
-        const { error } = await supabase
-            .from('shares')
-            .delete()
-            .eq('id', id);
-        
-        if (error) throw error;
-        
-        res.json({
-            success: true,
-            message: 'Compartilhamento cancelado com sucesso!'
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao cancelar compartilhamento:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao cancelar compartilhamento',
-            error: error.message
-        });
-    }
-});
-
-// READ - Obter detalhes de um compartilhamento
-router.get('/:id', authenticateUser, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user_id = req.user.id;
-        
-        // Verificar se o compartilhamento existe e é do usuário
-        const { data, error } = await supabase
-            .from('shares')
-            .select(`
-                *,
-                calendars (
-                    id,
-                    name,
-                    color
-                ),
-                tasks (
-                    id,
-                    title,
-                    status
-                ),
-                notes (
-                    id,
-                    title
-                )
-            `)
-            .eq('id', id)
-            .or(`shared_by.eq.${user_id},shared_with.eq.${user_id}`)
-            .single();
-        
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Compartilhamento não encontrado'
-                });
-            }
-            throw error;
-        }
-        
-        res.json({
-            success: true,
-            message: 'Compartilhamento carregado com sucesso!',
-            data
-        });
-        
-    } catch (error) {
-        console.error('❌ Erro ao obter compartilhamento:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erro ao obter compartilhamento',
-            error: error.message
-        });
-    }
-});
-
-// SEARCH - Buscar usuários para compartilhar
+// ========================================
+// BUSCAR USUÁRIOS PARA COMPARTILHAR
+// ========================================
 router.get('/search-users', authenticateUser, async (req, res) => {
     try {
         const { query } = req.query;
@@ -532,7 +103,112 @@ router.get('/search-users', authenticateUser, async (req, res) => {
     }
 });
 
-// READ - Obter compartilhamentos de um calendário específico
+// ========================================
+// COMPARTILHAR CALENDÁRIO
+// ========================================
+router.post('/share', authenticateUser, async (req, res) => {
+    try {
+        const { calendarId, userEmail, permissions } = req.body;
+        const ownerId = req.user.id;
+        
+        if (!calendarId || !userEmail) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID do calendário e email são obrigatórios'
+            });
+        }
+        
+        console.log('📤 Compartilhando calendário:', { calendarId, userEmail, ownerId });
+        
+        // Verificar se o calendário existe e pertence ao usuário
+        const { data: calendar, error: calendarError } = await supabase
+            .from('calendars')
+            .select('id, name')
+            .eq('id', calendarId)
+            .eq('user_id', ownerId)
+            .single();
+        
+        if (calendarError || !calendar) {
+            return res.status(404).json({
+                success: false,
+                message: 'Calendário não encontrado ou você não tem permissão para compartilhá-lo'
+            });
+        }
+        
+        // Buscar usuário pelo email
+        const { data: targetUser, error: userError } = await supabase
+            .from('users')
+            .select('id, email, name')
+            .eq('email', userEmail)
+            .single();
+        
+        if (userError || !targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+        
+        // Verificar se não está tentando compartilhar consigo mesmo
+        if (targetUser.id === ownerId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Não é possível compartilhar um calendário consigo mesmo'
+            });
+        }
+        
+        // Verificar se já existe compartilhamento
+        const { data: existingShare, error: shareCheckError } = await supabase
+            .from('calendar_shares')
+            .select('id')
+            .eq('calendar_id', calendarId)
+            .eq('shared_with_id', targetUser.id)
+            .single();
+        
+        if (existingShare && !shareCheckError) {
+            return res.status(400).json({
+                success: false,
+                message: 'Este calendário já está compartilhado com este usuário'
+            });
+        }
+        
+        // Criar compartilhamento
+        const { data, error } = await supabase
+            .from('calendar_shares')
+            .insert([
+                {
+                    calendar_id: calendarId,
+                    owner_id: ownerId,
+                    shared_with_id: targetUser.id,
+                    can_edit: permissions?.can_edit !== false,
+                    can_delete: permissions?.can_delete !== false,
+                    can_share: permissions?.can_share || false,
+                    shared_at: new Date().toISOString()
+                }
+            ])
+            .select();
+        
+        if (error) throw error;
+        
+        res.status(201).json({
+            success: true,
+            message: 'Calendário compartilhado com sucesso!',
+            data: data[0]
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao compartilhar calendário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao compartilhar calendário',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// OBTER COMPARTILHAMENTOS DE UM CALENDÁRIO
+// ========================================
 router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
     try {
         const { calendarId } = req.params;
@@ -542,12 +218,14 @@ router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
         
         // Buscar compartilhamentos do calendário (compartilhados por você)
         const { data: shares, error } = await supabase
-            .from('shares')
-            .select('*')
-            .eq('item_type', 'calendar')
-            .eq('item_id', calendarId)
-            .eq('shared_by', user_id)
-            .order('created_at', { ascending: false });
+            .from('calendar_shares')
+            .select(`
+                *,
+                users!calendar_shares_shared_with_id_fkey(id, name, email)
+            `)
+            .eq('calendar_id', calendarId)
+            .eq('owner_id', user_id)
+            .order('shared_at', { ascending: false });
         
         if (error) {
             console.error('❌ Erro ao buscar compartilhamentos:', error);
@@ -567,6 +245,54 @@ router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Erro ao buscar compartilhamentos do calendário',
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// REMOVER COMPARTILHAMENTO
+// ========================================
+router.delete('/:shareId', authenticateUser, async (req, res) => {
+    try {
+        const { shareId } = req.params;
+        const user_id = req.user.id;
+        
+        console.log('🗑️ Removendo compartilhamento:', shareId, 'usuário:', user_id);
+        
+        // Verificar se o compartilhamento existe e foi criado pelo usuário
+        const { data: share, error: checkError } = await supabase
+            .from('calendar_shares')
+            .select('*')
+            .eq('id', shareId)
+            .eq('owner_id', user_id)
+            .single();
+        
+        if (checkError || !share) {
+            return res.status(404).json({
+                success: false,
+                message: 'Compartilhamento não encontrado'
+            });
+        }
+        
+        // Deletar compartilhamento
+        const { error } = await supabase
+            .from('calendar_shares')
+            .delete()
+            .eq('id', shareId);
+        
+        if (error) throw error;
+        
+        res.json({
+            success: true,
+            message: 'Compartilhamento removido com sucesso!'
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao remover compartilhamento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao remover compartilhamento',
             error: error.message
         });
     }
