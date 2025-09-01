@@ -146,18 +146,40 @@ router.post('/', authenticateUser, async (req, res) => {
             });
         }
         
-        // Verificar se o calendário pertence ao usuário
-        const { data: calendar, error: calendarError } = await supabase
+        // Verificar se o usuário tem acesso ao calendário (próprio ou compartilhado)
+        let hasAccess = false;
+        let canEdit = false;
+        
+        // 1. Verificar se é calendário próprio
+        const { data: ownCalendar, error: ownError } = await supabase
             .from('calendars')
             .select('id')
             .eq('id', calendar_id)
             .eq('user_id', user_id)
             .single();
         
-        if (calendarError || !calendar) {
-            return res.status(404).json({
+        if (!ownError && ownCalendar) {
+            hasAccess = true;
+            canEdit = true; // Dono pode sempre editar
+        } else {
+            // 2. Verificar se é calendário compartilhado com permissão de editar
+            const { data: sharedCalendar, error: sharedError } = await supabase
+                .from('calendar_shares')
+                .select('can_edit')
+                .eq('calendar_id', calendar_id)
+                .eq('shared_with_id', user_id)
+                .single();
+            
+            if (!sharedError && sharedCalendar && sharedCalendar.can_edit) {
+                hasAccess = true;
+                canEdit = true;
+            }
+        }
+        
+        if (!hasAccess || !canEdit) {
+            return res.status(403).json({
                 success: false,
-                message: 'Calendário não encontrado'
+                message: 'Calendário não encontrado ou sem permissão para criar tarefas'
             });
         }
         
