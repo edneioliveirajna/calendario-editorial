@@ -168,7 +168,7 @@ export const ShareCalendarModal = ({ open, onClose, calendarId, calendarName }: 
 
     try {
       const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/sharing/share/${shareId}`;
+      const url = `${baseUrl}/sharing/${shareId}`;
       
       await apiRequest(url, {
         method: 'DELETE'
@@ -209,7 +209,7 @@ export const ShareCalendarModal = ({ open, onClose, calendarId, calendarName }: 
     setUpdatingPermissions(true);
     try {
       const baseUrl = getApiBaseUrl();
-      const url = `${baseUrl}/sharing/share/${editingShare.id}`;
+      const url = `${baseUrl}/sharing/${editingShare.id}`;
       
       await apiRequest(url, {
         method: 'PUT',
