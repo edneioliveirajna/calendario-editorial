@@ -129,13 +129,27 @@ router.post('/share', authenticateUser, async (req, res) => {
             });
         }
         
+        // Buscar usuário com quem compartilhar pelo email
+        const { data: targetUser, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', shared_with_email)
+            .single();
+        
+        if (userError || !targetUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+        
         // Verificar se já existe um compartilhamento
         const { data: existingShare, error: shareCheckError } = await supabase
-            .from('sharing')
+            .from('shares')
             .select('*')
             .eq('item_type', item_type)
             .eq('item_id', item_id)
-            .eq('shared_with_email', shared_with_email)
+            .eq('shared_with', targetUser.id)
             .eq('status', 'pending')
             .single();
         
@@ -148,14 +162,14 @@ router.post('/share', authenticateUser, async (req, res) => {
         
         // Criar compartilhamento
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .insert([
                 {
                     item_type,
                     item_id,
-                    shared_by_user_id: user_id,
-                    shared_with_email,
-                    permissions: permissions || ['read'],
+                    shared_by: user_id,
+                    shared_with: targetUser.id,
+                    permissions: permissions || 'read',
                     status: 'pending',
                     created_at: new Date().toISOString()
                 }
@@ -186,7 +200,7 @@ router.get('/shared', authenticateUser, async (req, res) => {
         const user_id = req.user.id;
         
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .select(`
                 *,
                 calendars (
@@ -204,7 +218,7 @@ router.get('/shared', authenticateUser, async (req, res) => {
                     title
                 )
             `)
-            .eq('shared_by_user_id', user_id)
+            .eq('shared_by', user_id)
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -228,10 +242,10 @@ router.get('/shared', authenticateUser, async (req, res) => {
 // READ - Listar itens recebidos pelo usuário
 router.get('/received', authenticateUser, async (req, res) => {
     try {
-        const user_email = req.user.email;
+        const user_id = req.user.id;
         
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .select(`
                 *,
                 calendars (
@@ -249,7 +263,7 @@ router.get('/received', authenticateUser, async (req, res) => {
                     title
                 )
             `)
-            .eq('shared_with_email', user_email)
+            .eq('shared_with', user_id)
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -274,14 +288,14 @@ router.get('/received', authenticateUser, async (req, res) => {
 router.put('/:id/accept', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const user_email = req.user.email;
+        const user_id = req.user.id;
         
         // Verificar se o compartilhamento existe e é para o usuário
         const { data: sharing, error: checkError } = await supabase
-            .from('sharing')
+            .from('shares')
             .select('*')
             .eq('id', id)
-            .eq('shared_with_email', user_email)
+            .eq('shared_with', user_id)
             .eq('status', 'pending')
             .single();
         
@@ -294,10 +308,9 @@ router.put('/:id/accept', authenticateUser, async (req, res) => {
         
         // Atualizar status para aceito
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .update({
                 status: 'accepted',
-                accepted_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
             .eq('id', id)
@@ -325,14 +338,14 @@ router.put('/:id/accept', authenticateUser, async (req, res) => {
 router.put('/:id/decline', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const user_email = req.user.email;
+        const user_id = req.user.id;
         
         // Verificar se o compartilhamento existe e é para o usuário
         const { data: sharing, error: checkError } = await supabase
-            .from('sharing')
+            .from('shares')
             .select('*')
             .eq('id', id)
-            .eq('shared_with_email', user_email)
+            .eq('shared_with', user_id)
             .eq('status', 'pending')
             .single();
         
@@ -345,10 +358,9 @@ router.put('/:id/decline', authenticateUser, async (req, res) => {
         
         // Atualizar status para recusado
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .update({
                 status: 'declined',
-                declined_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             })
             .eq('id', id)
@@ -380,10 +392,10 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         
         // Verificar se o compartilhamento existe e foi criado pelo usuário
         const { data: sharing, error: checkError } = await supabase
-            .from('sharing')
+            .from('shares')
             .select('*')
             .eq('id', id)
-            .eq('shared_by_user_id', user_id)
+            .eq('shared_by', user_id)
             .single();
         
         if (checkError || !sharing) {
@@ -395,7 +407,7 @@ router.delete('/:id', authenticateUser, async (req, res) => {
         
         // Deletar compartilhamento
         const { error } = await supabase
-            .from('sharing')
+            .from('shares')
             .delete()
             .eq('id', id);
         
@@ -421,11 +433,10 @@ router.get('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
         const user_id = req.user.id;
-        const user_email = req.user.email;
         
         // Verificar se o compartilhamento existe e é do usuário
         const { data, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .select(`
                 *,
                 calendars (
@@ -444,7 +455,7 @@ router.get('/:id', authenticateUser, async (req, res) => {
                 )
             `)
             .eq('id', id)
-            .or(`shared_by_user_id.eq.${user_id},shared_with_email.eq.${user_email}`)
+            .or(`shared_by.eq.${user_id},shared_with.eq.${user_id}`)
             .single();
         
         if (error) {
@@ -531,11 +542,11 @@ router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
         
         // Buscar compartilhamentos do calendário (compartilhados por você)
         const { data: shares, error } = await supabase
-            .from('sharing')
+            .from('shares')
             .select('*')
             .eq('item_type', 'calendar')
             .eq('item_id', calendarId)
-            .eq('shared_by_user_id', user_id)
+            .eq('shared_by', user_id)
             .order('created_at', { ascending: false });
         
         if (error) {
