@@ -357,8 +357,8 @@ export const CalendarSelector = ({
                       </Button>
                     )}
                     
-                    {/* Botão Compartilhar - sempre mostra para calendários próprios */}
-                    {onShareCalendar && (
+                    {/* Botão Compartilhar - só mostra se for dono ou tiver permissão */}
+                    {onShareCalendar && (calendar.is_owner || calendar.can_share) && (
                       <ShareButtonWithColor calendarId={calendar.id} onShare={() => {
                         onShareCalendar(calendar);
                         closeDropdown();

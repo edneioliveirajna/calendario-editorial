@@ -47,12 +47,13 @@ export const useTasks = (calendarId: number = 1) => {
             id: task.id.toString(),
             notes_count: task.notes_count || 0,
             has_notes: task.has_notes || false,
-            // Restaurado: campos necessários para permissões
+            // Usar permissões que vêm do backend
             calendarPermissions: {
-              can_edit: true,  // Por enquanto, permitir edição para todos
-              can_delete: true  // Por enquanto, permitir exclusão para todos
+              can_edit: task.can_edit || false,
+              can_delete: task.can_delete || false,
+              can_share: task.can_share || false
             },
-            isCalendarOwner: true  // Por enquanto, considerar todos como donos
+            isCalendarOwner: task.is_calendar_owner || false
           };
           
           return mappedTask;
