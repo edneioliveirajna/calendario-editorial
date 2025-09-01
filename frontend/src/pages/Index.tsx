@@ -555,18 +555,34 @@ const Index = () => {
         setShowCalendar(true); // ATIVAR FLAG DO CALENDÁRIO
         console.log('✅ INDEX: showCalendar definido como TRUE em loadFirstAvailableCalendar');
         
-        const firstCalendar = response.data[0];
-        console.log('📅 INDEX: Primeiro calendário selecionado:', firstCalendar);
+        // Verificar se há um calendário salvo no localStorage
+        const savedCalendarId = localStorage.getItem('selectedCalendarId');
+        let calendarToSelect = response.data[0]; // Padrão: primeiro calendário
         
-        setCurrentCalendarId(firstCalendar.id);
-        setCompanyName(firstCalendar.company_name);
-        setStartMonth(firstCalendar.start_month);
-        setSelectedCalendar(firstCalendar); // ✅ CRÍTICO: Definir o calendário completo
-        localStorage.setItem('selectedCalendarId', firstCalendar.id.toString());
+        if (savedCalendarId) {
+          // Tentar encontrar o calendário salvo na lista
+          const savedCalendar = response.data.find(c => c.id === parseInt(savedCalendarId));
+          if (savedCalendar) {
+            console.log('✅ INDEX: Calendário salvo encontrado na lista, mantendo seleção:', savedCalendar.company_name);
+            calendarToSelect = savedCalendar;
+          } else {
+            console.log('⚠️ INDEX: Calendário salvo não encontrado na lista, usando primeiro disponível');
+            // Limpar localStorage se o calendário salvo não existe mais
+            localStorage.removeItem('selectedCalendarId');
+          }
+        }
+        
+        console.log('📅 INDEX: Calendário selecionado:', calendarToSelect.company_name);
+        
+        setCurrentCalendarId(calendarToSelect.id);
+        setCompanyName(calendarToSelect.company_name);
+        setStartMonth(calendarToSelect.start_month);
+        setSelectedCalendar(calendarToSelect); // ✅ CRÍTICO: Definir o calendário completo
+        localStorage.setItem('selectedCalendarId', calendarToSelect.id.toString());
         
         // Atualizar currentDate para o mês do calendário
-        if (firstCalendar.start_month) {
-          const [year, month] = firstCalendar.start_month.split('-');
+        if (calendarToSelect.start_month) {
+          const [year, month] = calendarToSelect.start_month.split('-');
           const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
           setCurrentDate(newDate);
         }
@@ -628,9 +644,43 @@ const Index = () => {
           }
         } catch (error) {
           console.error('❌ INDEX: Erro ao carregar calendário salvo:', error);
-          // Em caso de erro, verificar se existem outros calendários
-          console.log('🔄 INDEX: Chamando loadFirstAvailableCalendar...');
-          loadFirstAvailableCalendar();
+          // Em caso de erro, verificar se o calendário ainda existe na lista
+          console.log('🔄 INDEX: Verificando se calendário salvo ainda existe...');
+          const checkCalendarExists = async () => {
+            try {
+              const listResponse = await apiRequest(API_ROUTES.CALENDARS.LIST);
+              if (listResponse.success && listResponse.data) {
+                const calendarExists = listResponse.data.find(c => c.id === parseInt(savedCalendarId));
+                if (calendarExists) {
+                  console.log('✅ INDEX: Calendário salvo ainda existe, carregando...');
+                  // Calendário ainda existe, carregar normalmente
+                  setCurrentCalendarId(parseInt(savedCalendarId));
+                  setHasCalendars(true);
+                  setShowCalendar(true);
+                  setCompanyName(calendarExists.company_name || '');
+                  setStartMonth(calendarExists.start_month || '');
+                  setSelectedCalendar(calendarExists);
+                  
+                  if (calendarExists.start_month) {
+                    const [year, month] = calendarExists.start_month.split('-');
+                    const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                    setCurrentDate(newDate);
+                  }
+                } else {
+                  console.log('❌ INDEX: Calendário salvo não existe mais, carregando primeiro disponível...');
+                  // Calendário não existe mais, carregar primeiro disponível
+                  loadFirstAvailableCalendar();
+                }
+              } else {
+                console.log('❌ INDEX: Erro ao listar calendários, carregando primeiro disponível...');
+                loadFirstAvailableCalendar();
+              }
+            } catch (listError) {
+              console.error('❌ INDEX: Erro ao verificar calendários:', listError);
+              loadFirstAvailableCalendar();
+            }
+          };
+          checkCalendarExists();
         }
       };
       
