@@ -473,4 +473,92 @@ router.get('/:id', authenticateUser, async (req, res) => {
     }
 });
 
+// SEARCH - Buscar usuários para compartilhar
+router.get('/search-users', authenticateUser, async (req, res) => {
+    try {
+        const { query } = req.query;
+        const currentUserId = req.user.id;
+        
+        if (!query || query.length < 2) {
+            return res.json({
+                success: true,
+                message: 'Query muito curta. Digite pelo menos 2 caracteres.',
+                users: []
+            });
+        }
+        
+        console.log('🔍 Buscando usuários com query:', query, 'para usuário:', currentUserId);
+        
+        // Buscar usuários pelo nome ou email (excluindo o usuário atual)
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+            .neq('id', currentUserId)
+            .order('name')
+            .limit(10);
+        
+        if (error) {
+            console.error('❌ Erro ao buscar usuários:', error);
+            throw error;
+        }
+        
+        console.log('✅ Usuários encontrados:', users?.length || 0);
+        
+        res.json({
+            success: true,
+            message: 'Usuários encontrados com sucesso!',
+            users: users || []
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar usuários:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar usuários',
+            error: error.message
+        });
+    }
+});
+
+// READ - Obter compartilhamentos de um calendário específico
+router.get('/calendar/:calendarId', authenticateUser, async (req, res) => {
+    try {
+        const { calendarId } = req.params;
+        const user_id = req.user.id;
+        
+        console.log('📋 Carregando compartilhamentos para calendário:', calendarId, 'usuário:', user_id);
+        
+        // Buscar compartilhamentos do calendário (compartilhados por você)
+        const { data: shares, error } = await supabase
+            .from('sharing')
+            .select('*')
+            .eq('item_type', 'calendar')
+            .eq('item_id', calendarId)
+            .eq('shared_by_user_id', user_id)
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('❌ Erro ao buscar compartilhamentos:', error);
+            throw error;
+        }
+        
+        console.log('✅ Compartilhamentos encontrados:', shares?.length || 0);
+        
+        res.json({
+            success: true,
+            message: 'Compartilhamentos do calendário carregados com sucesso!',
+            shares: shares || []
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar compartilhamentos do calendário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar compartilhamentos do calendário',
+            error: error.message
+        });
+    }
+});
+
 module.exports = router;

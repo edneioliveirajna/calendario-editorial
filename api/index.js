@@ -49,7 +49,7 @@ const authRoutes = require('./auth');
 const calendarRoutes = require('./calendars');
 const taskRoutes = require('./tasks');
 const noteRoutes = require('./notes');
-const sharingRoutes = require('./sharing');
+const sharingRoutes = require('./routes/sharing');
 
 // Usar rotas
 app.use('/auth', authRoutes);
