@@ -415,9 +415,14 @@ router.put('/:id', authenticateUser, async (req, res) => {
         if (error) throw error;
         
         // ✅ NOVO: Ajustar datas das tarefas se start_month foi alterado
+        console.log('🔍 API DEBUG: Verificando condições para ajuste de tarefas:');
+        console.log('🔍 API DEBUG: start_month !== undefined:', start_month !== undefined);
+        console.log('🔍 API DEBUG: oldStartMonth:', oldStartMonth);
+        console.log('🔍 API DEBUG: newStartMonth:', newStartMonth);
+        console.log('🔍 API DEBUG: oldStartMonth !== newStartMonth:', oldStartMonth !== newStartMonth);
+        
         if (start_month !== undefined && oldStartMonth && oldStartMonth !== newStartMonth) {
             console.log('🔄 API DEBUG: Ajustando datas das tarefas no banco...');
-            console.log('🔄 API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
             console.log('🔄 API DEBUG: start_month foi realmente alterado!');
             
             try {
