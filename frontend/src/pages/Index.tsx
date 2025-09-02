@@ -117,8 +117,14 @@ const Index = () => {
   // Função para editar calendário
   const handleEditCalendar = (calendar: any) => {
     console.log('🔄 DEBUG: handleEditCalendar chamado com:', calendar);
+    console.log('🔄 DEBUG: calendar.id:', calendar?.id);
+    console.log('🔄 DEBUG: calendar.company_name:', calendar?.company_name);
+    console.log('🔄 DEBUG: calendar.start_month:', calendar?.start_month);
+    
     // Abrir modal de edição
+    console.log('🔄 DEBUG: Definindo selectedCalendar...');
     setSelectedCalendar(calendar);
+    console.log('🔄 DEBUG: Definindo showEditCalendarModal como true...');
     setShowEditCalendarModal(true);
     console.log('✅ DEBUG: Modal de edição aberto');
   };
