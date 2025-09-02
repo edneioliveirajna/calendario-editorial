@@ -47,6 +47,7 @@ export const API_ROUTES = {
   // Calendários
   CALENDARS: {
     LIST: '/calendars',
+    READ: (id) => `/calendars/${id}`,
     CREATE: '/calendars',
     UPDATE: (id) => `/calendars/${id}`,
     DELETE: (id) => `/calendars/${id}`,
