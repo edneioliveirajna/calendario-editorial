@@ -439,14 +439,26 @@ router.put('/:id', authenticateUser, async (req, res) => {
                     for (const task of tasks) {
                         if (task.scheduled_date) {
                             const taskDate = new Date(task.scheduled_date);
-                            const day = taskDate.getDate(); // Manter o mesmo dia
+                            const originalDay = taskDate.getDate(); // Dia original da tarefa
                             
-                            // Criar nova data com o novo mês/ano mas o mesmo dia
-                            const newTaskDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, day);
+                            // ✅ NOVA LÓGICA: Adaptar dia para o novo mês
+                            const newYearNum = parseInt(newYear);
+                            const newMonthNum = parseInt(newMonth);
+                            
+                            // Calcular o último dia do novo mês
+                            const lastDayOfNewMonth = new Date(newYearNum, newMonthNum, 0).getDate();
+                            
+                            // Determinar o dia final: se o dia original > último dia do novo mês, usar o último dia
+                            const finalDay = Math.min(originalDay, lastDayOfNewMonth);
+                            
+                            // Criar nova data com o novo mês/ano e dia adaptado
+                            const newTaskDate = new Date(newYearNum, newMonthNum - 1, finalDay);
                             
                             console.log('🔄 API DEBUG: Ajustando tarefa:', task.title);
-                            console.log('   📅 De:', task.scheduled_date, '(dia', day, ')');
-                            console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', day, ')');
+                            console.log('   📅 De:', task.scheduled_date, '(dia', originalDay, ')');
+                            console.log('   📅 Novo mês tem', lastDayOfNewMonth, 'dias');
+                            console.log('   📅 Dia final:', finalDay, '(original:', originalDay, ', máximo:', lastDayOfNewMonth, ')');
+                            console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', finalDay, ')');
                             
                             // Atualizar a tarefa no banco
                             const { error: updateTaskError } = await supabase
