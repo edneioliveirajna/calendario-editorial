@@ -114,67 +114,8 @@ const Index = () => {
     }
   };
 
-  // Função para ajustar datas das tarefas quando o mês de início do calendário muda
-  const adjustTasksToNewMonth = async (newStartMonth: string, oldStartMonth?: string) => {
-    try {
-      console.log('🔄 DEBUG: Ajustando tarefas para o novo mês:', newStartMonth);
-      console.log('🔄 DEBUG: Mês antigo (parâmetro):', oldStartMonth);
-      
-      // Usar o mês antigo passado como parâmetro, ou o estado local como fallback
-      const oldMonth = oldStartMonth || startMonth;
-      
-      if (!oldMonth) {
-        console.log('⚠️ DEBUG: Não foi possível determinar o mês antigo, pulando ajuste');
-        return;
-      }
-      
-      // Buscar todas as tarefas do calendário atual
-      const response = await apiRequest(`${API_ROUTES.TASKS.LIST}?calendar_id=${currentCalendarId}`);
-      
-      if (response.success && response.data && response.data.length > 0) {
-        console.log('📋 DEBUG: Encontradas tarefas para ajustar:', response.data.length);
-        
-        // ✅ LÓGICA SIMPLES: Apenas trocar o mês, manter o dia
-        const [newYear, newMonth] = newStartMonth.split('-');
-        
-        console.log('📅 DEBUG: Novo mês:', newStartMonth, '(ano:', newYear, 'mês:', newMonth, ')');
-        
-        // Ajustar cada tarefa
-        for (const task of response.data) {
-          if (task.scheduled_date) {
-            const taskDate = new Date(task.scheduled_date);
-            const day = taskDate.getDate(); // Manter o mesmo dia
-            
-            // Criar nova data com o novo mês/ano mas o mesmo dia
-            const newTaskDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, day);
-            
-            console.log('🔄 DEBUG: Ajustando tarefa:', task.title);
-            console.log('   📅 De:', task.scheduled_date, '(dia', day, ')');
-            console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', day, ')');
-            
-            // Atualizar a tarefa no backend
-            await apiRequest(API_ROUTES.TASKS.UPDATE(task.id), {
-              method: 'PUT',
-              body: JSON.stringify({
-                scheduled_date: newTaskDate.toISOString().split('T')[0]
-              })
-            });
-          }
-        }
-        
-        console.log('✅ DEBUG: Todas as tarefas foram ajustadas para o novo mês');
-        
-        // Recarregar as tarefas para mostrar as mudanças
-        loadTasks();
-        
-      } else {
-        console.log('ℹ️ DEBUG: Nenhuma tarefa encontrada para ajustar');
-      }
-      
-    } catch (error) {
-      console.error('❌ DEBUG: Erro ao ajustar tarefas:', error);
-    }
-  };
+  // ✅ REMOVIDO: Função adjustTasksToNewMonth não é mais necessária
+  // O backend agora ajusta automaticamente as tarefas quando o start_month é alterado
 
   // Função para editar calendário
   const handleEditCalendar = (calendar: any) => {
@@ -995,10 +936,8 @@ const Index = () => {
                 const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
                 setCurrentDate(newDate);
                 
-                // ✅ NOVO: Ajustar datas das tarefas para o novo mês
-                console.log('🔄 DEBUG: Ajustando datas das tarefas para o novo mês...');
-                console.log('🔄 DEBUG: Mês antigo do calendário:', selectedCalendar?.start_month);
-                adjustTasksToNewMonth(updatedCalendar.start_month, selectedCalendar?.start_month);
+                console.log('🔄 DEBUG: Mês do calendário alterado para:', updatedCalendar.start_month);
+                console.log('🔄 DEBUG: Backend já ajustou automaticamente as tarefas no banco');
               }
               
               // Forçar atualização do displayMonth
@@ -1016,10 +955,11 @@ const Index = () => {
               });
               
               // CRÍTICO: Recarregar as tarefas após atualização no banco
-              // Aguardar um pouco para o banco processar, depois recarregar
+              // Aguardar um pouco para o backend processar o ajuste das tarefas
               setTimeout(() => {
+                console.log('🔄 DEBUG: Recarregando tarefas após ajuste automático no backend...');
                 loadTasks();
-              }, 1000); // Aumentei para 1 segundo para dar tempo do banco processar
+              }, 2000); // Aumentei para 2 segundos para dar tempo do backend processar
             }}
           />
         )}
