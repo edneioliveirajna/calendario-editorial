@@ -12,14 +12,17 @@ export const useTasks = (calendarId: number = 1) => {
 
   // Carregar tarefas do backend
   const loadTasks = useCallback(async () => {
+    console.log('🔄 useTasks: loadTasks chamado para calendarId:', calendarId);
     setLoading(true);
     setError(null);
     
     try {
       // Usar o endpoint correto para buscar tarefas por calendário
       const url = `${API_ROUTES.TASKS.LIST}?calendar_id=${calendarId}`;
+      console.log('🔄 useTasks: Fazendo requisição para:', url);
       
       const response = await apiRequest(url);
+      console.log('🔄 useTasks: Resposta recebida:', response);
       
       if (response.success) {
         // Converter datas do backend para objetos Date
@@ -58,8 +61,11 @@ export const useTasks = (calendarId: number = 1) => {
           
           return mappedTask;
         });
+        console.log('🔄 useTasks: Tarefas processadas:', tasksWithDates.length);
+        console.log('🔄 useTasks: Primeiras 3 tarefas:', tasksWithDates.slice(0, 3).map(t => ({ id: t.id, title: t.title, date: t.date.toISOString().split('T')[0] })));
         setTasks(tasksWithDates);
       } else {
+        console.log('❌ useTasks: Erro na resposta:', response.error);
         setError(response.error || 'Erro ao carregar tarefas');
       }
     } catch (err) {

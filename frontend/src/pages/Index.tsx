@@ -958,10 +958,24 @@ const Index = () => {
               
               // CRÍTICO: Recarregar as tarefas após atualização no banco
               // Aguardar um pouco para o backend processar o ajuste das tarefas
-              setTimeout(() => {
+              setTimeout(async () => {
                 console.log('🔄 DEBUG: Recarregando tarefas após ajuste automático no backend...');
                 console.log('🔄 DEBUG: newDate usado para atualização:', newDate?.toISOString());
-                loadTasks();
+                
+                // Forçar reload completo das tarefas
+                try {
+                  await loadTasks();
+                  console.log('✅ DEBUG: Tarefas recarregadas com sucesso');
+                  
+                  // Aguardar mais um pouco e recarregar novamente para garantir
+                  setTimeout(async () => {
+                    console.log('🔄 DEBUG: Segundo reload das tarefas para garantir...');
+                    await loadTasks();
+                  }, 1000);
+                  
+                } catch (error) {
+                  console.error('❌ DEBUG: Erro ao recarregar tarefas:', error);
+                }
               }, 2000); // Aumentei para 2 segundos para dar tempo do backend processar
             }}
           />
