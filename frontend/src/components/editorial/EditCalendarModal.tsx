@@ -100,8 +100,11 @@ export const EditCalendarModal = ({
           
           if (updatedResponse.success && updatedResponse.calendar) {
             console.log('✅ DEBUG: Calendário atualizado encontrado:', updatedResponse.calendar);
+            console.log('📅 DEBUG: start_month do backend:', updatedResponse.calendar.start_month);
+            console.log('🏢 DEBUG: company_name do backend:', updatedResponse.calendar.company_name);
             
             // 2. Atualizar o calendário no componente pai
+            console.log('🔄 DEBUG: Chamando onCalendarUpdated com dados:', updatedResponse.calendar);
             onCalendarUpdated(updatedResponse.calendar);
             
             // 3. FORÇAR atualização da lista de calendários no CalendarSelector

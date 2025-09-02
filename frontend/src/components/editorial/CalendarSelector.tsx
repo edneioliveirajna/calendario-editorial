@@ -190,8 +190,11 @@ export const CalendarSelector = ({
       
       if (event.detail.updatedCalendar) {
         console.log('✅ DEBUG: Forçando atualização com dados:', event.detail.updatedCalendar);
+        console.log('📅 DEBUG: start_month recebido:', event.detail.updatedCalendar.start_month);
+        console.log('🏢 DEBUG: company_name recebido:', event.detail.updatedCalendar.company_name);
         
         // FORÇAR atualização imediata
+        console.log('🔄 DEBUG: Atualizando currentCalendar...');
         setCurrentCalendar(event.detail.updatedCalendar);
         
         // FORÇAR atualização da lista de calendários IMEDIATAMENTE
@@ -201,7 +204,11 @@ export const CalendarSelector = ({
           )
         );
         
-        console.log('✅ DEBUG: Lista de calendários atualizada manualmente');
+        // Recarregar lista completa de calendários APENAS se necessário
+        console.log('🔄 DEBUG: Recarregando lista de calendários...');
+        setTimeout(() => {
+          loadCalendars();
+        }, 500);
         
         console.log('✅ DEBUG: Atualização forçada concluída');
       }
@@ -398,6 +405,8 @@ export const CalendarSelector = ({
                 {/* Linha inferior: Informações do calendário */}
                 <div className="text-xs text-muted-foreground">
                   Início: {formatStartMonth(calendar.start_month)}
+                  {/* DEBUG: Log para verificar se está atualizando */}
+                  {console.log('🔍 DEBUG: Renderizando calendário:', calendar.company_name, 'start_month:', calendar.start_month)}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Criado: {formatDate(calendar.created_at)}
