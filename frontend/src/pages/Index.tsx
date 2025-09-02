@@ -931,12 +931,14 @@ const Index = () => {
               setSelectedCalendar(updatedCalendar);
               
               // IMPORTANTE: Atualizar currentDate para o novo mês
+              let newDate = null;
               if (updatedCalendar.start_month) {
                 const [year, month] = updatedCalendar.start_month.split('-');
-                const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+                newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
                 setCurrentDate(newDate);
                 
                 console.log('🔄 DEBUG: Mês do calendário alterado para:', updatedCalendar.start_month);
+                console.log('🔄 DEBUG: currentDate atualizado para:', newDate.toISOString());
                 console.log('🔄 DEBUG: Backend já ajustou automaticamente as tarefas no banco');
               }
               
@@ -958,6 +960,7 @@ const Index = () => {
               // Aguardar um pouco para o backend processar o ajuste das tarefas
               setTimeout(() => {
                 console.log('🔄 DEBUG: Recarregando tarefas após ajuste automático no backend...');
+                console.log('🔄 DEBUG: newDate usado para atualização:', newDate?.toISOString());
                 loadTasks();
               }, 2000); // Aumentei para 2 segundos para dar tempo do backend processar
             }}
