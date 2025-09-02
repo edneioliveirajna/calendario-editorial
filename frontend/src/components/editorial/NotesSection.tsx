@@ -10,12 +10,14 @@ import { useToast } from '../../hooks/use-toast';
 interface NotesSectionProps {
   currentCalendarId?: number;
   companyName?: string;
+  displayMonth?: string;
   tasks?: Array<{ id: string; title: string }> | undefined;
 }
 
 export const NotesSection: React.FC<NotesSectionProps> = ({ 
   currentCalendarId, 
   companyName,
+  displayMonth,
   tasks 
 }) => {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -162,7 +164,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
       <div className="flex items-center gap-2">
         <FileText className="h-6 w-6 text-blue-600" />
         <h2 className="text-xl font-bold text-gray-800">
-          📝 Notas do Mês - {companyName || 'Calendário'}
+          📝 Notas do Mês - {displayMonth || companyName || 'Calendário'}
         </h2>
       </div>
 

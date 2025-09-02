@@ -857,6 +857,7 @@ const Index = () => {
               <NotesSection 
                 currentCalendarId={currentCalendarId}
                 companyName={companyName}
+                displayMonth={displayMonth}
                 tasks={filteredTasks}
               />
             </>
