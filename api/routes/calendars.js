@@ -500,6 +500,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
         } else {
             console.log('ℹ️ API DEBUG: start_month não foi alterado, pulando ajuste de tarefas');
             console.log('ℹ️ API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
+            console.log('ℹ️ API DEBUG: Condições não atendidas - tarefas NÃO serão ajustadas');
         }
         
         res.json({
