@@ -115,9 +115,19 @@ const Index = () => {
   };
 
   // Função para ajustar datas das tarefas quando o mês de início do calendário muda
-  const adjustTasksToNewMonth = async (newStartMonth: string) => {
+  const adjustTasksToNewMonth = async (newStartMonth: string, oldStartMonth?: string) => {
     try {
       console.log('🔄 DEBUG: Ajustando tarefas para o novo mês:', newStartMonth);
+      console.log('🔄 DEBUG: Mês antigo (parâmetro):', oldStartMonth);
+      console.log('🔄 DEBUG: Mês antigo (estado):', startMonth);
+      
+      // Usar o mês antigo passado como parâmetro, ou o estado local como fallback
+      const oldMonth = oldStartMonth || startMonth;
+      
+      if (!oldMonth) {
+        console.log('⚠️ DEBUG: Não foi possível determinar o mês antigo, pulando ajuste');
+        return;
+      }
       
       // Buscar todas as tarefas do calendário atual
       const response = await apiRequest(`${API_ROUTES.TASKS.LIST}?calendar_id=${currentCalendarId}`);
@@ -127,14 +137,15 @@ const Index = () => {
         
         // Calcular a diferença de meses
         const [newYear, newMonth] = newStartMonth.split('-');
-        const [oldYear, oldMonth] = startMonth.split('-');
+        const [oldYear, oldMonthSplit] = oldMonth.split('-');
         
         const newDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, 1);
-        const oldDate = new Date(parseInt(oldYear), parseInt(oldMonth) - 1, 1);
+        const oldDate = new Date(parseInt(oldYear), parseInt(oldMonthSplit) - 1, 1);
         
         const monthDifference = (newDate.getFullYear() - oldDate.getFullYear()) * 12 + (newDate.getMonth() - oldDate.getMonth());
         
         console.log('📅 DEBUG: Diferença de meses:', monthDifference);
+        console.log('📅 DEBUG: De', oldMonth, 'para', newStartMonth);
         
         // Ajustar cada tarefa
         for (const task of response.data) {
@@ -989,7 +1000,8 @@ const Index = () => {
                 
                 // ✅ NOVO: Ajustar datas das tarefas para o novo mês
                 console.log('🔄 DEBUG: Ajustando datas das tarefas para o novo mês...');
-                adjustTasksToNewMonth(updatedCalendar.start_month);
+                console.log('🔄 DEBUG: Mês antigo do calendário:', selectedCalendar?.start_month);
+                adjustTasksToNewMonth(updatedCalendar.start_month, selectedCalendar?.start_month);
               }
               
               // Forçar atualização do displayMonth
