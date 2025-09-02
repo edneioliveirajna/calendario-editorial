@@ -194,16 +194,14 @@ export const CalendarSelector = ({
         // FORÇAR atualização imediata
         setCurrentCalendar(event.detail.updatedCalendar);
         
-        // Recarregar lista completa de calendários
-        console.log('🔄 DEBUG: Recarregando lista de calendários...');
-        loadCalendars();
-        
-        // FORÇAR atualização da lista de calendários também
+        // FORÇAR atualização da lista de calendários IMEDIATAMENTE
         setCalendars(prevCalendars => 
           prevCalendars.map(cal => 
             cal.id === event.detail.updatedCalendar.id ? event.detail.updatedCalendar : cal
           )
         );
+        
+        console.log('✅ DEBUG: Lista de calendários atualizada manualmente');
         
         console.log('✅ DEBUG: Atualização forçada concluída');
       }
