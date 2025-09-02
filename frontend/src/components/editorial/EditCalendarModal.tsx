@@ -41,7 +41,12 @@ export const EditCalendarModal = ({
   });
 
   useEffect(() => {
+    console.log('🔄 DEBUG: EditCalendarModal useEffect executado, calendar:', calendar);
     if (calendar) {
+      console.log('📝 DEBUG: Inicializando formData com:', {
+        company_name: calendar.company_name || '',
+        start_month: calendar.start_month || ''
+      });
       setFormData({
         company_name: calendar.company_name || '',
         start_month: calendar.start_month || ''
