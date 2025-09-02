@@ -338,14 +338,14 @@ export const CalendarSelector = ({
                         size="sm"
                         className="h-6 w-6 p-0 hover:bg-gray-200"
                         onClick={(e) => {
-                          console.log('🔵 DEBUG: Botão EDITAR clicado!');
-                          console.log('   Calendário:', calendar);
-                          console.log('   Função onEditCalendar existe:', !!onEditCalendar);
                           e.stopPropagation();
-                          console.log('   Chamando onEditCalendar...');
-                          onEditCalendar(calendar);
-                          console.log('   onEditCalendar executado, fechando dropdown...');
-                          closeDropdown();
+                          console.log('🔵 BOTÃO EDITAR CLICADO!', calendar);
+                          if (onEditCalendar) {
+                            onEditCalendar(calendar);
+                            closeDropdown();
+                          } else {
+                            console.error('❌ onEditCalendar não existe!');
+                          }
                         }}
                         title="Editar calendário"
                       >
