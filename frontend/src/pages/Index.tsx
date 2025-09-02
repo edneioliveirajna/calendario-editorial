@@ -119,7 +119,6 @@ const Index = () => {
     try {
       console.log('🔄 DEBUG: Ajustando tarefas para o novo mês:', newStartMonth);
       console.log('🔄 DEBUG: Mês antigo (parâmetro):', oldStartMonth);
-      console.log('🔄 DEBUG: Mês antigo (estado):', startMonth);
       
       // Usar o mês antigo passado como parâmetro, ou o estado local como fallback
       const oldMonth = oldStartMonth || startMonth;
@@ -135,25 +134,23 @@ const Index = () => {
       if (response.success && response.data && response.data.length > 0) {
         console.log('📋 DEBUG: Encontradas tarefas para ajustar:', response.data.length);
         
-        // Calcular a diferença de meses
+        // ✅ LÓGICA SIMPLES: Apenas trocar o mês, manter o dia
         const [newYear, newMonth] = newStartMonth.split('-');
-        const [oldYear, oldMonthSplit] = oldMonth.split('-');
         
-        const newDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, 1);
-        const oldDate = new Date(parseInt(oldYear), parseInt(oldMonthSplit) - 1, 1);
-        
-        const monthDifference = (newDate.getFullYear() - oldDate.getFullYear()) * 12 + (newDate.getMonth() - oldDate.getMonth());
-        
-        console.log('📅 DEBUG: Diferença de meses:', monthDifference);
-        console.log('📅 DEBUG: De', oldMonth, 'para', newStartMonth);
+        console.log('📅 DEBUG: Novo mês:', newStartMonth, '(ano:', newYear, 'mês:', newMonth, ')');
         
         // Ajustar cada tarefa
         for (const task of response.data) {
           if (task.scheduled_date) {
             const taskDate = new Date(task.scheduled_date);
-            const newTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth() + monthDifference, taskDate.getDate());
+            const day = taskDate.getDate(); // Manter o mesmo dia
             
-            console.log('🔄 DEBUG: Ajustando tarefa:', task.title, 'de', task.scheduled_date, 'para', newTaskDate.toISOString().split('T')[0]);
+            // Criar nova data com o novo mês/ano mas o mesmo dia
+            const newTaskDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, day);
+            
+            console.log('🔄 DEBUG: Ajustando tarefa:', task.title);
+            console.log('   📅 De:', task.scheduled_date, '(dia', day, ')');
+            console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', day, ')');
             
             // Atualizar a tarefa no backend
             await apiRequest(API_ROUTES.TASKS.UPDATE(task.id), {
