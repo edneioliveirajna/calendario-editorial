@@ -415,8 +415,9 @@ router.put('/:id', authenticateUser, async (req, res) => {
         if (error) throw error;
         
         // ✅ NOVO: Ajustar datas das tarefas se start_month foi alterado
-        if (start_month !== undefined && oldStartMonth && oldStartMonth !== newStartMonth) {
+        if (start_month !== undefined && newStartMonth) {
             console.log('🔄 API DEBUG: Ajustando datas das tarefas no banco...');
+            console.log('🔄 API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
             
             try {
                 // Buscar todas as tarefas do calendário
@@ -429,6 +430,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
                     console.error('❌ API ERROR: Erro ao buscar tarefas:', tasksError);
                 } else if (tasks && tasks.length > 0) {
                     console.log('📋 API DEBUG: Encontradas tarefas para ajustar:', tasks.length);
+                    console.log('📋 API DEBUG: Lista de tarefas:', tasks.map(t => ({ id: t.id, title: t.title, scheduled_date: t.scheduled_date })));
                     
                     // ✅ LÓGICA SIMPLES: Apenas trocar o mês, manter o dia
                     const [newYear, newMonth] = newStartMonth.split('-');
@@ -459,6 +461,13 @@ router.put('/:id', authenticateUser, async (req, res) => {
                             console.log('   📅 Novo mês tem', lastDayOfNewMonth, 'dias');
                             console.log('   📅 Dia final:', finalDay, '(original:', originalDay, ', máximo:', lastDayOfNewMonth, ')');
                             console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', finalDay, ')');
+                            
+                            // Verificar se houve mudança de dia
+                            if (finalDay !== originalDay) {
+                                console.log('   ⚠️ ADAPTAÇÃO: Dia foi ajustado de', originalDay, 'para', finalDay);
+                            } else {
+                                console.log('   ✅ MANTIDO: Dia permaneceu', originalDay);
+                            }
                             
                             // Atualizar a tarefa no banco
                             const { error: updateTaskError } = await supabase
