@@ -415,9 +415,10 @@ router.put('/:id', authenticateUser, async (req, res) => {
         if (error) throw error;
         
         // ✅ NOVO: Ajustar datas das tarefas se start_month foi alterado
-        if (start_month !== undefined && newStartMonth) {
+        if (start_month !== undefined && oldStartMonth && oldStartMonth !== newStartMonth) {
             console.log('🔄 API DEBUG: Ajustando datas das tarefas no banco...');
             console.log('🔄 API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
+            console.log('🔄 API DEBUG: start_month foi realmente alterado!');
             
             try {
                 // Buscar todas as tarefas do calendário
@@ -490,6 +491,9 @@ router.put('/:id', authenticateUser, async (req, res) => {
                 console.error('❌ API ERROR: Erro ao ajustar tarefas:', adjustError);
                 // Não falhar a atualização do calendário por causa do erro nas tarefas
             }
+        } else {
+            console.log('ℹ️ API DEBUG: start_month não foi alterado, pulando ajuste de tarefas');
+            console.log('ℹ️ API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
         }
         
         res.json({
