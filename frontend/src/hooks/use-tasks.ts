@@ -130,10 +130,7 @@ export const useTasks = (calendarId: number = 1) => {
         console.log('📝 TASKS DEBUG: Nova tarefa criada:', newTask);
         setTasks(prev => [...prev, newTask]);
         
-        toast({
-          title: "✅ Sucesso!",
-          description: "Tarefa criada e salva no banco de dados!",
-        });
+        // Não mostrar toast aqui - será mostrado na página Index.tsx
         
         return newTask;
       } else {

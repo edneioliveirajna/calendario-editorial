@@ -70,10 +70,7 @@ export const EditTaskModal = ({ open, onClose, onTaskUpdated, onTaskDeleted, tas
         description: taskData.description
       });
       
-      toast({
-        title: "✅ Tarefa atualizada!",
-        description: "Tarefa foi atualizada com sucesso.",
-      });
+      // Não mostrar toast aqui - será mostrado na página Index.tsx
       
       onClose();
     } catch (error) {
