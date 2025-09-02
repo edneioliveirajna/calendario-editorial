@@ -394,6 +394,7 @@ router.put('/:id', authenticateUser, async (req, res) => {
             oldStartMonth = currentCalendar.start_month;
             
             console.log('🔄 API DEBUG: start_month sendo alterado de', oldStartMonth, 'para', newStartMonth);
+            console.log('🔄 API DEBUG: currentCalendar:', currentCalendar);
         }
         
         const updateData = {};
