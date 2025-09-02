@@ -367,11 +367,21 @@ const Index = () => {
       });
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
-      toast({
-        title: "❌ Erro!",
-        description: "Falha ao atualizar tarefa. Tente novamente.",
-        variant: "destructive",
-      });
+      
+      // Verificar se é erro de permissão
+      if (error.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: error.permissionMessage || "Você não tem permissão para editar esta tarefa. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro!",
+          description: "Falha ao atualizar tarefa. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -402,11 +412,21 @@ const Index = () => {
       });
     } catch (error) {
       console.error('Erro ao deletar tarefa:', error);
-      toast({
-        title: "❌ Erro!",
-        description: "Falha ao excluir tarefa. Tente novamente.",
-        variant: "destructive",
-      });
+      
+      // Verificar se é erro de permissão
+      if (error.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: error.permissionMessage || "Você não tem permissão para excluir esta tarefa. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro!",
+          description: "Falha ao excluir tarefa. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -442,11 +462,21 @@ const Index = () => {
       
     } catch (error) {
       console.error('Erro ao mover tarefa:', error);
-      toast({
-        title: "❌ Erro!",
-        description: "Falha ao mover tarefa.",
-        variant: "destructive",
-      });
+      
+      // Verificar se é erro de permissão
+      if (error.isPermissionError) {
+        toast({
+          title: "🚫 Acesso Negado",
+          description: error.permissionMessage || "Você não tem permissão para mover esta tarefa. Verifique com o administrador do calendário.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Erro!",
+          description: "Falha ao mover tarefa.",
+          variant: "destructive",
+        });
+      }
     }
   };
 

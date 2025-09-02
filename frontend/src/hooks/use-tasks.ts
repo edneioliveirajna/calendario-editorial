@@ -180,14 +180,11 @@ export const useTasks = (calendarId: number = 1) => {
         });
         
         if (response.success) {
-          setTasks(prev => prev.map(task => 
-            task.id === taskId ? { ...task, ...updates } : task
-          ));
+                  setTasks(prev => prev.map(task => 
+          task.id === taskId ? { ...task, ...updates } : task
+        ));
         
-        toast({
-          title: "✅ Atualizado!",
-          description: "Tarefa atualizada no banco de dados!",
-        });
+        // Não mostrar toast aqui - será mostrado na página Index.tsx
       } else {
         throw new Error(response.error || 'Erro ao atualizar tarefa');
       }
@@ -251,10 +248,7 @@ export const useTasks = (calendarId: number = 1) => {
         
         setTasks(prev => prev.filter(task => task.id !== taskId));
         
-        toast({
-          title: "🗑️ Deletado!",
-          description: "Tarefa e notas associadas removidas com sucesso!",
-        });
+        // Não mostrar toast aqui - será mostrado na página Index.tsx
       } else {
         throw new Error(response.error || 'Erro ao deletar tarefa');
       }
@@ -315,10 +309,7 @@ export const useTasks = (calendarId: number = 1) => {
           month: 'long'
         });
         
-        toast({
-          title: "✅ Movida!",
-          description: `Tarefa movida para ${formattedDisplayDate}!`,
-        });
+        // Não mostrar toast aqui - será mostrado na página Index.tsx se necessário
         
         return response.data;
       } else {
