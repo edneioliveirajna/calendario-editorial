@@ -464,9 +464,9 @@ router.put('/:id', authenticateUser, async (req, res) => {
                             
                             // Verificar se houve mudança de dia
                             if (finalDay !== originalDay) {
-                                console.log('   ⚠️ ADAPTAÇÃO: Dia foi ajustado de', originalDay, 'para', finalDay);
+                                console.log('   ⚠️ ADAPTAÇÃO: Dia foi ajustado de', originalDay, 'para', finalDay, '(novo mês tem apenas', lastDayOfNewMonth, 'dias)');
                             } else {
-                                console.log('   ✅ MANTIDO: Dia permaneceu', originalDay);
+                                console.log('   ✅ MANTIDO: Dia permaneceu', originalDay, '(novo mês tem', lastDayOfNewMonth, 'dias)');
                             }
                             
                             // Atualizar a tarefa no banco
