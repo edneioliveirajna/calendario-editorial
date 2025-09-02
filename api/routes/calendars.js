@@ -377,26 +377,6 @@ router.put('/:id', authenticateUser, async (req, res) => {
             });
         }
         
-        // ✅ NOVO: Verificar se start_month está sendo alterado para ajustar tarefas
-        let oldStartMonth = null;
-        let newStartMonth = start_month;
-        
-        if (start_month !== undefined) {
-            // Buscar o start_month atual do calendário
-            const { data: currentCalendar, error: currentError } = await supabase
-                .from('calendars')
-                .select('start_month')
-                .eq('id', id)
-                .eq('user_id', user_id)
-                .single();
-            
-            if (currentError) throw currentError;
-            oldStartMonth = currentCalendar.start_month;
-            
-            console.log('🔄 API DEBUG: start_month sendo alterado de', oldStartMonth, 'para', newStartMonth);
-            console.log('🔄 API DEBUG: currentCalendar:', currentCalendar);
-        }
-        
         const updateData = {};
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
@@ -415,93 +395,9 @@ router.put('/:id', authenticateUser, async (req, res) => {
         
         if (error) throw error;
         
-        // ✅ NOVO: Ajustar datas das tarefas se start_month foi alterado
-        console.log('🔍 API DEBUG: Verificando condições para ajuste de tarefas:');
-        console.log('🔍 API DEBUG: start_month !== undefined:', start_month !== undefined);
-        console.log('🔍 API DEBUG: oldStartMonth:', oldStartMonth);
-        console.log('🔍 API DEBUG: newStartMonth:', newStartMonth);
-        console.log('🔍 API DEBUG: oldStartMonth !== newStartMonth:', oldStartMonth !== newStartMonth);
-        
-        if (start_month !== undefined && oldStartMonth && oldStartMonth !== newStartMonth) {
-            console.log('🔄 API DEBUG: Ajustando datas das tarefas no banco...');
-            console.log('🔄 API DEBUG: start_month foi realmente alterado!');
-            
-            try {
-                // Buscar todas as tarefas do calendário
-                const { data: tasks, error: tasksError } = await supabase
-                    .from('tasks')
-                    .select('id, scheduled_date, title')
-                    .eq('calendar_id', id);
-                
-                if (tasksError) {
-                    console.error('❌ API ERROR: Erro ao buscar tarefas:', tasksError);
-                } else if (tasks && tasks.length > 0) {
-                    console.log('📋 API DEBUG: Encontradas tarefas para ajustar:', tasks.length);
-                    console.log('📋 API DEBUG: Lista de tarefas:', tasks.map(t => ({ id: t.id, title: t.title, scheduled_date: t.scheduled_date })));
-                    
-                    // ✅ LÓGICA SIMPLES: Apenas trocar o mês, manter o dia
-                    const [newYear, newMonth] = newStartMonth.split('-');
-                    
-                    console.log('📅 API DEBUG: Novo mês:', newStartMonth, '(ano:', newYear, 'mês:', newMonth, ')');
-                    
-                    // Ajustar cada tarefa
-                    for (const task of tasks) {
-                        if (task.scheduled_date) {
-                            const taskDate = new Date(task.scheduled_date);
-                            const originalDay = taskDate.getDate(); // Dia original da tarefa
-                            
-                            // ✅ NOVA LÓGICA: Adaptar dia para o novo mês
-                            const newYearNum = parseInt(newYear);
-                            const newMonthNum = parseInt(newMonth);
-                            
-                            // Calcular o último dia do novo mês
-                            const lastDayOfNewMonth = new Date(newYearNum, newMonthNum, 0).getDate();
-                            
-                            // Determinar o dia final: se o dia original > último dia do novo mês, usar o último dia
-                            const finalDay = Math.min(originalDay, lastDayOfNewMonth);
-                            
-                            // Criar nova data com o novo mês/ano e dia adaptado
-                            const newTaskDate = new Date(newYearNum, newMonthNum - 1, finalDay);
-                            
-                            console.log('🔄 API DEBUG: Ajustando tarefa:', task.title);
-                            console.log('   📅 De:', task.scheduled_date, '(dia', originalDay, ')');
-                            console.log('   📅 Novo mês tem', lastDayOfNewMonth, 'dias');
-                            console.log('   📅 Dia final:', finalDay, '(original:', originalDay, ', máximo:', lastDayOfNewMonth, ')');
-                            console.log('   📅 Para:', newTaskDate.toISOString().split('T')[0], '(dia', finalDay, ')');
-                            
-                            // Verificar se houve mudança de dia
-                            if (finalDay !== originalDay) {
-                                console.log('   ⚠️ ADAPTAÇÃO: Dia foi ajustado de', originalDay, 'para', finalDay, '(novo mês tem apenas', lastDayOfNewMonth, 'dias)');
-                            } else {
-                                console.log('   ✅ MANTIDO: Dia permaneceu', originalDay, '(novo mês tem', lastDayOfNewMonth, 'dias)');
-                            }
-                            
-                            // Atualizar a tarefa no banco
-                            const { error: updateTaskError } = await supabase
-                                .from('tasks')
-                                .update({ scheduled_date: newTaskDate.toISOString().split('T')[0] })
-                                .eq('id', task.id);
-                            
-                            if (updateTaskError) {
-                                console.error('❌ API ERROR: Erro ao atualizar tarefa', task.id, ':', updateTaskError);
-                            }
-                        }
-                    }
-                    
-                    console.log('✅ API DEBUG: Todas as tarefas foram ajustadas no banco para o novo mês');
-                } else {
-                    console.log('ℹ️ API DEBUG: Nenhuma tarefa encontrada para ajustar');
-                }
-                
-            } catch (adjustError) {
-                console.error('❌ API ERROR: Erro ao ajustar tarefas:', adjustError);
-                // Não falhar a atualização do calendário por causa do erro nas tarefas
-            }
-        } else {
-            console.log('ℹ️ API DEBUG: start_month não foi alterado, pulando ajuste de tarefas');
-            console.log('ℹ️ API DEBUG: oldStartMonth:', oldStartMonth, 'newStartMonth:', newStartMonth);
-            console.log('ℹ️ API DEBUG: Condições não atendidas - tarefas NÃO serão ajustadas');
-        }
+        // ✅ REMOVIDO: Lógica de ajuste automático de tarefas
+        // Esta lógica estava interferindo com o movimento manual de tarefas
+        console.log('ℹ️ API DEBUG: Lógica de ajuste automático de tarefas foi removida para evitar conflitos com movimento manual');
         
         res.json({
             success: true,
