@@ -357,8 +357,10 @@ router.get('/:id', authenticateUser, async (req, res) => {
 router.put('/:id', authenticateUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, description, color } = req.body;
+        const { name, description, color, company_name, start_month } = req.body;
         const user_id = req.user.id;
+        
+        console.log('🔍 API DEBUG: Atualizando calendário:', { id, name, description, color, company_name, start_month });
         
         // Verificar se o calendário existe e pertence ao usuário
         const { data: existing, error: checkError } = await supabase
@@ -379,6 +381,8 @@ router.put('/:id', authenticateUser, async (req, res) => {
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (color !== undefined) updateData.color = color;
+        if (company_name !== undefined) updateData.company_name = company_name;
+        if (start_month !== undefined) updateData.start_month = start_month;
         
         updateData.updated_at = new Date().toISOString();
         
