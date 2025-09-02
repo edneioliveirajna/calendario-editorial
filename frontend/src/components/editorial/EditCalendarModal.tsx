@@ -52,6 +52,10 @@ export const EditCalendarModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 DEBUG: handleSubmit do EditCalendarModal executado!');
+    console.log('📝 DEBUG: formData:', formData);
+    console.log('📅 DEBUG: calendar.id:', calendar?.id);
+    
     if (!formData.company_name.trim() || !formData.start_month) {
       toast({
         title: "❌ Erro!",
