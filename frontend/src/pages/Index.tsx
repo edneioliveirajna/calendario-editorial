@@ -355,16 +355,17 @@ const Index = () => {
     try {
       await updateTask(updatedTask.id, updatedTask);
       
-      // Recarregar tarefas para atualizar o relatório automaticamente
-      await loadTasks();
-      
-      // O modal de relatório se atualizará automaticamente através das props
-      // já que o hook useTasks atualiza o estado local
-      
+      // Mostrar mensagem de sucesso IMEDIATAMENTE
       toast({
         title: "✅ Tarefa atualizada!",
         description: `Tarefa "${updatedTask.title}" foi atualizada com sucesso!`,
       });
+      
+      // Recarregar tarefas para atualizar o relatório automaticamente (em background)
+      loadTasks();
+      
+      // O modal de relatório se atualizará automaticamente através das props
+      // já que o hook useTasks atualiza o estado local
     } catch (error) {
       console.error('Erro ao atualizar tarefa:', error);
       
@@ -389,8 +390,14 @@ const Index = () => {
     try {
       await deleteTask(taskId);
       
-      // Recarregar tarefas para atualizar o relatório automaticamente
-      await loadTasks();
+      // Mostrar mensagem de sucesso IMEDIATAMENTE
+      toast({
+        title: "✅ Tarefa excluída!",
+        description: "Tarefa e notas associadas foram excluídas com sucesso!",
+      });
+      
+      // Recarregar tarefas para atualizar o relatório automaticamente (em background)
+      loadTasks();
       
       // O modal de relatório se atualizará automaticamente através das props
       // já que o hook useTasks atualiza o estado local
@@ -405,11 +412,6 @@ const Index = () => {
           }));
         }, 500);
       }
-      
-      toast({
-        title: "✅ Tarefa excluída!",
-        description: "Tarefa e notas associadas foram excluídas com sucesso!",
-      });
     } catch (error) {
       console.error('Erro ao deletar tarefa:', error);
       
