@@ -114,6 +114,60 @@ const Index = () => {
     }
   };
 
+  // Função para ajustar datas das tarefas quando o mês de início do calendário muda
+  const adjustTasksToNewMonth = async (newStartMonth: string) => {
+    try {
+      console.log('🔄 DEBUG: Ajustando tarefas para o novo mês:', newStartMonth);
+      
+      // Buscar todas as tarefas do calendário atual
+      const response = await apiRequest(`${API_ROUTES.TASKS.LIST}?calendar_id=${currentCalendarId}`);
+      
+      if (response.success && response.data && response.data.length > 0) {
+        console.log('📋 DEBUG: Encontradas tarefas para ajustar:', response.data.length);
+        
+        // Calcular a diferença de meses
+        const [newYear, newMonth] = newStartMonth.split('-');
+        const [oldYear, oldMonth] = startMonth.split('-');
+        
+        const newDate = new Date(parseInt(newYear), parseInt(newMonth) - 1, 1);
+        const oldDate = new Date(parseInt(oldYear), parseInt(oldMonth) - 1, 1);
+        
+        const monthDifference = (newDate.getFullYear() - oldDate.getFullYear()) * 12 + (newDate.getMonth() - oldDate.getMonth());
+        
+        console.log('📅 DEBUG: Diferença de meses:', monthDifference);
+        
+        // Ajustar cada tarefa
+        for (const task of response.data) {
+          if (task.scheduled_date) {
+            const taskDate = new Date(task.scheduled_date);
+            const newTaskDate = new Date(taskDate.getFullYear(), taskDate.getMonth() + monthDifference, taskDate.getDate());
+            
+            console.log('🔄 DEBUG: Ajustando tarefa:', task.title, 'de', task.scheduled_date, 'para', newTaskDate.toISOString().split('T')[0]);
+            
+            // Atualizar a tarefa no backend
+            await apiRequest(API_ROUTES.TASKS.UPDATE(task.id), {
+              method: 'PUT',
+              body: JSON.stringify({
+                scheduled_date: newTaskDate.toISOString().split('T')[0]
+              })
+            });
+          }
+        }
+        
+        console.log('✅ DEBUG: Todas as tarefas foram ajustadas para o novo mês');
+        
+        // Recarregar as tarefas para mostrar as mudanças
+        loadTasks();
+        
+      } else {
+        console.log('ℹ️ DEBUG: Nenhuma tarefa encontrada para ajustar');
+      }
+      
+    } catch (error) {
+      console.error('❌ DEBUG: Erro ao ajustar tarefas:', error);
+    }
+  };
+
   // Função para editar calendário
   const handleEditCalendar = (calendar: any) => {
     console.log('🔄 DEBUG: handleEditCalendar chamado com:', calendar);
@@ -932,6 +986,10 @@ const Index = () => {
                 const [year, month] = updatedCalendar.start_month.split('-');
                 const newDate = new Date(parseInt(year), parseInt(month) - 1, 1);
                 setCurrentDate(newDate);
+                
+                // ✅ NOVO: Ajustar datas das tarefas para o novo mês
+                console.log('🔄 DEBUG: Ajustando datas das tarefas para o novo mês...');
+                adjustTasksToNewMonth(updatedCalendar.start_month);
               }
               
               // Forçar atualização do displayMonth
