@@ -107,14 +107,14 @@ export const EditCalendarModal = ({
           const updatedResponse = await apiRequest(API_ROUTES.CALENDARS.READ(calendar.id));
           console.log('📥 DEBUG: Resposta do backend:', updatedResponse);
           
-          if (updatedResponse.success && updatedResponse.calendar) {
-            console.log('✅ DEBUG: Calendário atualizado encontrado:', updatedResponse.calendar);
-            console.log('📅 DEBUG: start_month do backend:', updatedResponse.calendar.start_month);
-            console.log('🏢 DEBUG: company_name do backend:', updatedResponse.calendar.company_name);
+          if (updatedResponse.success && updatedResponse.data) {
+            console.log('✅ DEBUG: Calendário atualizado encontrado:', updatedResponse.data);
+            console.log('📅 DEBUG: start_month do backend:', updatedResponse.data.start_month);
+            console.log('🏢 DEBUG: company_name do backend:', updatedResponse.data.company_name);
             
             // 2. Atualizar o calendário no componente pai
-            console.log('🔄 DEBUG: Chamando onCalendarUpdated com dados:', updatedResponse.calendar);
-            onCalendarUpdated(updatedResponse.calendar);
+            console.log('🔄 DEBUG: Chamando onCalendarUpdated com dados:', updatedResponse.data);
+            onCalendarUpdated(updatedResponse.data);
             
             // 3. FORÇAR atualização da lista de calendários no CalendarSelector
             // Simular um "refresh invisível" recarregando os dados
@@ -126,7 +126,7 @@ export const EditCalendarModal = ({
                   console.log('✅ DEBUG: Lista de calendários recarregada');
                   // Disparar evento customizado para forçar atualização
                   window.dispatchEvent(new CustomEvent('forceCalendarUpdate', {
-                    detail: { updatedCalendar: updatedResponse.calendar }
+                    detail: { updatedCalendar: updatedResponse.data }
                   }));
                 }
               } catch (error) {
