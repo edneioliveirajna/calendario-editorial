@@ -28,16 +28,20 @@ export const useTasks = (calendarId: number = 1) => {
         // Converter datas do backend para objetos Date
         const tasksWithDates = (response.data || []).map((task: any) => {
           // Garantir que a data seja interpretada como local, não UTC
+          // ✅ CORRIGIDO: Priorizar scheduled_date (atualizado pelo backend) sobre date
           let localDate: Date;
           
-          if (task.date) {
-            const [year, month, day] = task.date.split('-');
-            localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-          } else if (task.scheduled_date) {
+          if (task.scheduled_date) {
             const [year, month, day] = task.scheduled_date.split('-');
             localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            console.log('🔄 useTasks: Usando scheduled_date:', task.scheduled_date, '→', localDate.toISOString().split('T')[0]);
+          } else if (task.date) {
+            const [year, month, day] = task.date.split('-');
+            localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+            console.log('🔄 useTasks: Usando date (fallback):', task.date, '→', localDate.toISOString().split('T')[0]);
           } else {
             localDate = new Date(); // Data atual como fallback
+            console.log('🔄 useTasks: Usando data atual como fallback');
           }
           
           // Mapear campos do backend para o formato do frontend
