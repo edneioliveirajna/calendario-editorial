@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* REMOÇÃO COMPLETA DE TODOS OS OUTLINES */
+* {
+  outline: none !important;
+}
+
+*:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+[tabindex]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: inherit !important;
+}
+
+/* Estilos para drag & drop do modal */
+body.dragging-from-modal {
+  cursor: grabbing !important;
+}
+
+body.dragging-from-modal * {
+  cursor: grabbing !important;
+}
+
+/* Indicador visual durante drag */
+.dragging-from-modal .calendar-day {
+  transition: all 0.2s ease;
+}
+
+.dragging-from-modal .calendar-day:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgb(59, 130, 246);
+  transform: scale(1.02);
+}
+
+/* Destaque especial para tarefas no modal vindas do tooltip */
+.highlighted-task {
+  animation: highlightPulse 2s ease-in-out infinite !important;
+  border: 2px solid rgb(147, 51, 234) !important;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(147, 51, 234, 0.08)) !important;
+  position: relative !important;
+  z-index: 10 !important;
+  transform: scale(1.02) !important;
+  transition: all 0.3s ease !important;
+  border-radius: 9999px !important;
+}
+
+/* Garantir que o container da tarefa não corte o destaque */
+.calendar-day .highlighted-task {
+  overflow: visible !important;
+  clip-path: none !important;
+  mask: none !important;
+}
+
+/* Garantir que o container pai também não corte */
+.calendar-day {
+  overflow: visible !important;
+}
+
+/* Garantir que o Badge não corte o destaque */
+.badge.highlighted-task,
+.badge[class*="highlighted-task"] {
+  overflow: visible !important;
+  clip-path: none !important;
+  mask: none !important;
+  position: relative !important;
+  z-index: 20 !important;
+  /* Garantir que os botões de ação funcionem */
+  pointer-events: auto !important;
+}
+
+/* Garantir que o container do Badge também não corte */
+.calendar-day .badge {
+  overflow: visible !important;
+}
+
+/* Garantir que os botões de ação funcionem sempre */
+.calendar-day .badge button,
+.calendar-day .badge .absolute {
+  pointer-events: auto !important;
+  z-index: 30 !important;
+  position: relative !important;
+}
+
+/* Permite scroll da PÁGINA quando modal é aberto via tooltip */
+.modal-tooltip-open {
+  overflow: auto !important;
+  pointer-events: auto !important;
+}
+
+.modal-tooltip-open,
+.modal-tooltip-open html {
+  overflow: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* Remove APENAS bloqueios de scroll, mantém pointerEvents para fechar modal */
+.modal-tooltip-open [data-radix-portal] {
+  overflow: visible !important;
+}
+
+.modal-tooltip-open [data-radix-dropdown-menu-content] {
+  pointer-events: auto !important;
+  overflow: visible !important;
+}
+
+/* Remove bloqueios específicos de scroll */
+.modal-tooltip-open [data-scroll-locked] {
+  overflow: auto !important;
+}
+
+/* Força scroll no container interno do modal */
+.modal-tooltip-open .p-1 {
+  overflow-y: auto !important;
+  max-height: 320px !important;
+  overflow: auto !important;
+}
+
+@keyframes highlightPulse {
+  0%, 100% {
+    transform: scale(1.02);
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(147, 51, 234, 0.08));
+  }
+  50% {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(147, 51, 234, 0.12));
+  }
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 250 50% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 231 64% 57%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 20% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 231 64% 57%;
+
+    /* Editorial Calendar Specific Colors */
+    --marketing-primary: 231 64% 57%;
+    --marketing-secondary: 148 60% 70%;
+    --content-video: 271 91% 65%;
+    --content-image: 24 100% 50%;
+    --content-text: 201 96% 32%;
+    --content-campaign: 339 82% 52%;
+    --content-ad: 200 100% 70%;
+    
+    /* Platform Colors */
+    --platform-instagram: 316 73% 52%;
+    --platform-youtube: 0 100% 50%;
+    --platform-tiktok: 0 0% 0%;
+    --platform-facebook: 221 44% 41%;
+    --platform-linkedin: 200 100% 40%;
+    
+    /* Status Colors */
+    --status-pending: 43 96% 56%;
+    --status-completed: 142 71% 45%;
+    --status-overdue: 0 84% 60%;
+    
+    /* Calendar Specific */
+    --calendar-grid: 210 20% 95%;
+    --calendar-today: 231 64% 95%;
+    --calendar-weekend: 210 15% 97%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
